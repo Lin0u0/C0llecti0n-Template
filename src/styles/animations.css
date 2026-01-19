@@ -1,0 +1,185 @@
+/*
+ * Animations - Smooth interactions for skeuomorphic elements
+ * Optimized for performance with will-change and reduced motion support
+ */
+
+/* ==================== Keyframes ==================== */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* ==================== Staggered Animations ==================== */
+.stagger-children>* {
+    opacity: 0;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-children>*:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.stagger-children>*:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.stagger-children>*:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.stagger-children>*:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.stagger-children>*:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.stagger-children>*:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.stagger-children>*:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.stagger-children>*:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+.stagger-children>*:nth-child(9) {
+    animation-delay: 0.45s;
+}
+
+.stagger-children>*:nth-child(10) {
+    animation-delay: 0.5s;
+}
+
+/* ==================== Modal Animations ==================== */
+.modal-overlay {
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+}
+
+.modal-content {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+    will-change: transform, opacity;
+}
+
+.modal-overlay.active .modal-content {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* ==================== Loading States ==================== */
+.skeleton {
+    background: linear-gradient(90deg, var(--wood-darkest) 0%, var(--wood-dark) 50%, var(--wood-darkest) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+/* ==================== Focus States ==================== */
+.focus-ring:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 3px;
+}
+
+/* ==================== Performance Optimizations ==================== */
+/* Add will-change to interactive elements for GPU acceleration */
+.book-spine,
+.vinyl-sleeve,
+.disc-case {
+    will-change: transform;
+}
+
+/* Remove will-change when not hovering to save GPU memory */
+@media (hover: hover) {
+
+    .book-spine:not(:hover),
+    .vinyl-sleeve:not(:hover),
+    .disc-case:not(:hover) {
+        will-change: auto;
+    }
+}
+
+/* ==================== Reduced Motion Support ==================== */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .stagger-children>* {
+        animation: none;
+        opacity: 1;
+    }
+
+    .modal-content {
+        transform: none;
+    }
+
+    .book-spine:hover,
+    .vinyl-sleeve:hover,
+    .disc-case:hover {
+        transform: none;
+    }
+
+    /* Disable backdrop blur for reduced motion */
+    .modal-backdrop {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+}
+
+/* ==================== Low-end Device Optimizations ==================== */
+/* Reduce backdrop blur on devices that may struggle */
+@media (max-width: 768px) {
+    .modal-backdrop {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+}

@@ -1,0 +1,141 @@
+---
+interface Props {
+  expanded?: boolean;
+}
+
+const { expanded = false } = Astro.props;
+---
+
+<button
+  class="filter-toggle"
+  data-expanded={expanded}
+  aria-label="Toggle filters"
+  title="展开/收起筛选"
+>
+  <svg
+    class="toggle-icon"
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+  >
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+    <line x1="8" y1="18" x2="16" y2="18"></line>
+  </svg>
+  <span class="toggle-text">筛选</span>
+</button>
+
+<style>
+  /* Skeuomorphic button style - Dark mode: raised (convex) with subtle highlights */
+  .filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: var(--bg-wall);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    /* Dark mode: raised (convex) button with subtle highlights */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.4),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Hover effects only for devices that support hover (not touch) */
+  @media (hover: hover) {
+    .filter-toggle:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+      background: var(--bg-shelf);
+      box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    :global([data-theme="light"]) .filter-toggle:hover {
+      box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .filter-toggle:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .toggle-text {
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+
+  .toggle-icon {
+    display: inline-flex;
+    transition: transform var(--transition-normal);
+    opacity: 0.8;
+  }
+
+  .filter-toggle[data-expanded="true"] {
+    background: var(--bg-shelf);
+    color: var(--text-primary);
+    border-color: var(--border-focus);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Light mode: raised (convex) button with warm tones */
+  :global([data-theme="light"]) .filter-toggle {
+    color: var(--text-secondary);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border-top-color: rgba(255, 255, 255, 0.5);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-theme="light"]) .filter-toggle:active,
+  :global([data-theme="light"]) .filter-toggle[data-expanded="true"] {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector(".filter-toggle");
+    if (!toggle) return;
+
+    const collapsible = document.querySelector(".collapsible-filters");
+    if (!collapsible) return;
+
+    toggle.addEventListener("click", () => {
+      const isExpanded = toggle.getAttribute("data-expanded") === "true";
+      const newState = !isExpanded;
+
+      toggle.setAttribute("data-expanded", newState.toString());
+      collapsible.setAttribute("data-expanded", newState.toString());
+    });
+  });
+</script>

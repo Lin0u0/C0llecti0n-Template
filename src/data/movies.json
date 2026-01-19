@@ -1,0 +1,12 @@
+[
+  {
+    "id": "movie-1",
+    "title": "琳达！琳达！琳达！",
+    "rating": 8,
+    "status": "completed",
+    "type": "movie",
+    "country": "日本",
+    "cover": "/covers/p981572203.jpg",
+    "addedDate": "2025-06-15"
+  }
+]

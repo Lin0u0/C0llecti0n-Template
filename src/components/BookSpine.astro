@@ -1,0 +1,232 @@
+---
+interface Props {
+  title: string;
+  author: string;
+  rating?: number;
+  status?: "reading" | "completed" | "want-to-read";
+  cover?: string;
+  id: string;
+  year?: number;
+  addedDate?: string;
+  publisher?: string;
+  platform?: string;
+  country?: string;
+  notes?: string;
+}
+
+const {
+  title,
+  author,
+  rating,
+  status = "completed",
+  cover,
+  id,
+  year,
+  addedDate,
+  publisher,
+  platform,
+  country,
+  notes,
+} = Astro.props;
+
+// Fixed spine height
+const spineHeight = 200;
+
+// Generate a consistent random spine tone based on title
+const getSpineVariant = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return (Math.abs(hash) % 3) + 1;
+};
+
+const spineVariant = getSpineVariant(title + id);
+const spineClass = `spine-variant-${spineVariant}`;
+
+// Status indicator mapping removed in favor of ribbon design
+---
+
+<button
+  class={`book-spine focus-ring ${spineClass}`}
+  data-book-id={id}
+  data-title={title}
+  data-author={author}
+  data-cover={cover}
+  data-rating={rating}
+  data-status={status}
+  data-year={year}
+  data-added-date={addedDate}
+  data-publisher={publisher}
+  data-platform={platform}
+  data-country={country}
+  data-notes={notes}
+  style={`
+    --spine-height: ${spineHeight}px;
+  `}
+  aria-label={`${title} by ${author}`}
+>
+  <span class="spine-title">{title}</span>
+  {status === "reading" && <div class="reading-ribbon" />}
+</button>
+
+<style>
+  .book-spine {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: var(--spine-width, 40px);
+    min-width: var(--spine-width, 40px);
+    height: var(--spine-height);
+    padding: var(--space-sm) var(--space-xs);
+    color: var(--spine-text);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left-color: rgba(255, 255, 255, 0.12);
+    border-right-color: rgba(0, 0, 0, 0.15);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.2);
+    border-radius: 2px 4px 4px 2px;
+    position: relative;
+    transform-origin: bottom center;
+    /* Only animate transform for better performance */
+    transition: transform var(--transition-fast);
+    /* Enhanced shadow for depth */
+    box-shadow:
+      3px 3px 6px rgba(0, 0, 0, 0.3),
+      1px 1px 2px rgba(0, 0, 0, 0.2),
+      inset 1px 0 0 rgba(255, 255, 255, 0.08),
+      inset -1px 0 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .spine-variant-1 {
+    background: linear-gradient(
+      to right,
+      var(--spine-1) 0%,
+      color-mix(in srgb, var(--spine-1) 90%, white) 50%,
+      var(--spine-1) 100%
+    );
+  }
+  .spine-variant-2 {
+    background: linear-gradient(
+      to right,
+      var(--spine-2) 0%,
+      color-mix(in srgb, var(--spine-2) 90%, white) 50%,
+      var(--spine-2) 100%
+    );
+  }
+  .spine-variant-3 {
+    background: linear-gradient(
+      to right,
+      var(--spine-3) 0%,
+      color-mix(in srgb, var(--spine-3) 90%, white) 50%,
+      var(--spine-3) 100%
+    );
+  }
+
+  .book-spine:hover {
+    transform: translateY(-8px);
+    /* Shadow change is instant - no transition for performance */
+    box-shadow:
+      4px 8px 12px rgba(0, 0, 0, 0.4),
+      2px 4px 6px rgba(0, 0, 0, 0.3),
+      inset 1px 0 0 rgba(255, 255, 255, 0.1),
+      inset -1px 0 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Right edge shadow - simulates thickness */
+  .book-spine::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(0, 0, 0, 0.15) 50%,
+      rgba(0, 0, 0, 0.25) 100%
+    );
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Top highlight - simulates light from above */
+  .book-spine::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    right: 4px;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+  }
+
+  .spine-title {
+    writing-mode: vertical-rl;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: var(--space-xs) 0;
+    margin-top: 0;
+    overflow: hidden;
+    max-height: calc(var(--spine-height));
+    white-space: normal;
+    word-break: break-word;
+    hyphens: auto;
+    font-feature-settings: "vert";
+    /* Letterpress effect */
+    text-shadow:
+      0 0.5px 0 rgba(255, 255, 255, 0.15),
+      0 -0.5px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* Light mode letterpress */
+  :global([data-theme="light"]) .spine-title {
+    text-shadow:
+      0 0.5px 0 rgba(255, 255, 255, 0.6),
+      0 -0.5px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Reading Ribbon - Elegant deep red */
+  .reading-ribbon {
+    position: absolute;
+    top: -1px;
+    right: 4px;
+    width: 8px;
+    height: 35px;
+    /* Deep burgundy/wine red gradient */
+    background: linear-gradient(
+      to right,
+      #7d2d3c 0%,
+      #9b3a4a 50%,
+      #7d2d3c 100%
+    );
+    z-index: 5;
+    box-shadow:
+      1px 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+    transition: transform var(--transition-fast);
+  }
+
+  /* Light mode ribbon - Softer rose */
+  :global([data-theme="light"]) .reading-ribbon {
+    background: linear-gradient(
+      to right,
+      #a04050 0%,
+      #b85060 50%,
+      #a04050 100%
+    );
+  }
+</style>

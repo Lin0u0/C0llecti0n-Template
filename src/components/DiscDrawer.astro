@@ -1,0 +1,81 @@
+---
+import DiscCase from "./DiscCase.astro";
+
+interface Media {
+  id: string;
+  title: string;
+  director?: string;
+  cover: string;
+  type: "movie" | "series";
+  rating?: number;
+  status?: "watching" | "completed" | "want-to-watch";
+  year?: number;
+  addedDate?: string;
+  country?: string;
+  notes?: string;
+}
+
+interface Props {
+  movies?: Media[];
+  series?: Media[];
+  allMedia?: Media[];
+  variant?: "scroll" | "grid";
+}
+
+const {
+  movies,
+  series,
+  allMedia: externalAllMedia,
+  variant = "scroll",
+} = Astro.props;
+const allMedia = externalAllMedia || [...(movies || []), ...(series || [])];
+---
+
+<section class="disc-section">
+  <div
+    class={`discs-container ${variant === "scroll" ? "horizontal-scroll stagger-children" : "grid-layout"}`}
+  >
+    {allMedia.map((media) => <DiscCase {...media} />)}
+  </div>
+</section>
+
+<style>
+  .disc-section {
+    margin-bottom: var(--space-xl);
+    overflow: visible;
+  }
+
+  .discs-container {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-md);
+    padding: 0;
+    padding-top: var(--space-lg); /* Space for disc peeking out */
+    padding-bottom: var(--space-md); /* Space for shadows */
+    min-height: 220px;
+    overflow: visible;
+    position: relative;
+    z-index: 1; /* Keep below filter dropdowns */
+  }
+
+  .grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--disc-size));
+    justify-content: center;
+    padding-bottom: var(--space-lg);
+    row-gap: var(--space-xl);
+    column-gap: var(--space-md);
+  }
+
+  /* Scroll fade */
+  .horizontal-scroll::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    flex-shrink: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--bg-room));
+    pointer-events: none;
+  }
+</style>

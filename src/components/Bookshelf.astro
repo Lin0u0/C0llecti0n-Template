@@ -1,0 +1,80 @@
+---
+import BookSpine from "./BookSpine.astro";
+
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  rating?: number;
+  status?: "reading" | "completed" | "want-to-read";
+  cover?: string;
+  year?: number;
+  addedDate?: string;
+  publisher?: string;
+  platform?: string;
+  country?: string;
+  notes?: string;
+}
+
+interface Props {
+  books: Book[];
+  variant?: "scroll" | "grid";
+}
+
+const { books, variant = "scroll" } = Astro.props;
+---
+
+<section class="bookshelf-section">
+  <div
+    class={`books-container ${variant === "scroll" ? "horizontal-scroll stagger-children" : "grid-layout"}`}
+  >
+    {books.map((book) => <BookSpine {...book} />)}
+  </div>
+</section>
+
+<style>
+  .bookshelf-section {
+    margin-bottom: var(--space-xl);
+  }
+
+  /* Removed .bookshelf and .shelf-interior wrappers */
+
+  .books-container {
+    padding: 0;
+    /* padding-top: var(--space-md); Space for hover transform removed */
+    padding-bottom: var(
+      --space-md
+    ); /* Align with other sections that have shadow space */
+    min-height: 200px;
+    position: relative;
+    overflow: visible; /* Ensure hover doesn't clip */
+    z-index: 1; /* Keep below filter dropdowns */
+  }
+
+  .horizontal-scroll {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-xs);
+  }
+
+  .grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--spine-width));
+    justify-content: center;
+    padding-bottom: var(--space-lg);
+    row-gap: var(--space-lg);
+    column-gap: var(--space-xs);
+  }
+
+  /* Scroll hint only for scroll variant */
+  .horizontal-scroll::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    flex-shrink: 0;
+    width: 60px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--bg-room));
+    pointer-events: none;
+  }
+</style>

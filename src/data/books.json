@@ -1,0 +1,16 @@
+[
+  {
+    "id": "book-1",
+    "title": "凤凰籽",
+    "author": "东来",
+    "country": "中国",
+    "rating": 10,
+    "status": "completed",
+    "platform": "微信读书",
+    "publisher": "浙江文艺出版社",
+    "year": 2025,
+    "cover": "/covers/s35166318.jpg",
+    "addedDate": "2026-01-14",
+    "notes": "水晶球里的世界，INFJ 的面具，春秋笔法以证真伪。"
+  }
+]

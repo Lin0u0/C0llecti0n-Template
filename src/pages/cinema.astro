@@ -1,0 +1,381 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DiscDrawer from "../components/DiscDrawer.astro";
+import NavMenu from "../components/NavMenu.astro";
+import FilterToggle from "../components/FilterToggle.astro";
+import SortToggle from "../components/SortToggle.astro";
+import StatusFilter from "../components/StatusFilter.astro";
+import SearchButton from "../components/SearchButton.astro";
+import moviesData from "../data/movies.json";
+import seriesData from "../data/series.json";
+
+// Combine and sort
+const movies = moviesData.map((m) => ({ ...m, type: "movie" as const }));
+const series = seriesData.map((s) => ({ ...s, type: "series" as const }));
+
+const allMedia = [...movies, ...series].sort((a, b) => {
+    const dateA = new Date(a.addedDate || "1970-01-01").getTime();
+    const dateB = new Date(b.addedDate || "1970-01-01").getTime();
+    if (dateA !== dateB) return dateB - dateA;
+    return a.title.localeCompare(b.title);
+});
+
+// Helper function to split slash-separated values
+function splitBySlash(value: string | undefined): string[] {
+    if (!value) return [];
+    return value
+        .split(/\s*\/\s*/)
+        .map((v) => v.trim())
+        .filter(Boolean);
+}
+
+// Extract filter options (split slash-separated values into individual options)
+const directors = [
+    ...new Set(allMedia.flatMap((m) => splitBySlash((m as any).director))),
+].sort() as string[];
+const years = [
+    ...new Set(allMedia.map((m) => (m as any).year).filter(Boolean)),
+].sort((a, b) => (b as number) - (a as number));
+const countries = [
+    ...new Set(allMedia.flatMap((m) => splitBySlash(m.country))),
+].sort();
+---
+
+<Layout
+    title="Cinema | Lin0u0"
+    description="Cinema Collection"
+    totalCount={allMedia.length}
+>
+    <div class="page-container">
+        <header class="page-header">
+            <h1 class="page-title">Cinema</h1>
+            <NavMenu currentPage="cinema" />
+        </header>
+
+        <div class="filters-section">
+            <div class="filters-toolbar">
+                <FilterToggle />
+                <div class="toolbar-right">
+                    <SearchButton />
+                    <SortToggle showRating={true} />
+                </div>
+            </div>
+
+            <div class="collapsible-filters" data-expanded="false">
+                <div class="collapsible-inner">
+                    <div class="filter-group">
+                        <span class="filter-label">Status</span>
+                        <StatusFilter type="media" />
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Type</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="type"
+                                data-value="all">All</button
+                            >
+                            <button
+                                class="filter-chip"
+                                data-filter-type="type"
+                                data-value="movie">Movie</button
+                            >
+                            <button
+                                class="filter-chip"
+                                data-filter-type="type"
+                                data-value="series">Series</button
+                            >
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Added</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="added"
+                                data-value="all">All</button
+                            >
+                            {
+                                [
+                                    ...new Set(
+                                        allMedia.map((b) =>
+                                            (b.addedDate || "").substring(0, 4),
+                                        ),
+                                    ),
+                                ]
+                                    .filter((y) => y)
+                                    .sort((a, b) => Number(b) - Number(a))
+                                    .map((year) => (
+                                        <button
+                                            class="filter-chip"
+                                            data-filter-type="added"
+                                            data-value={year}
+                                        >
+                                            {year}
+                                        </button>
+                                    ))
+                            }
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Released</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="year"
+                                data-value="all">All</button
+                            >
+                            {
+                                years.map((year) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="year"
+                                        data-value={year}
+                                    >
+                                        {year}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Director</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="director"
+                                data-value="all">All</button
+                            >
+                            {
+                                directors.map((director) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="director"
+                                        data-value={director}
+                                    >
+                                        {director}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Country</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="country"
+                                data-value="all">All</button
+                            >
+                            {
+                                countries.map((country) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="country"
+                                        data-value={country}
+                                    >
+                                        {country}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="movies-grid">
+            <DiscDrawer allMedia={allMedia as any} variant="grid" />
+        </div>
+    </div>
+</Layout>
+
+<script>
+    const filters: Record<string, string> = {
+        type: "all",
+        director: "all",
+        year: "all",
+        added: "all",
+        country: "all",
+        status: "all", // New: status filter
+    };
+
+    let currentSort = "added-desc"; // Default sort
+
+    const chips = document.querySelectorAll(".filter-chip");
+    const items = document.querySelectorAll(".disc-case");
+    const itemsContainer = document.querySelector(".discs-container");
+    const statsDisplay = document.getElementById("stats-display");
+    const totalCount = items.length;
+
+    function updateStats() {
+        if (!statsDisplay) return;
+        const visibleCount = Array.from(items).filter(
+            (item) => (item as HTMLElement).style.display !== "none",
+        ).length;
+
+        if (visibleCount === totalCount) {
+            statsDisplay.textContent = `Total: ${totalCount}`;
+        } else {
+            statsDisplay.textContent = `Showing ${visibleCount} of ${totalCount}`;
+        }
+    }
+
+    function filterItems() {
+        items.forEach((item) => {
+            const itemEl = item as HTMLElement;
+            const itemType = itemEl.dataset.type || "";
+            const itemDirector = itemEl.dataset.director || "";
+            const itemYear = itemEl.dataset.year || "";
+            const itemAddedDate = itemEl.dataset.addedDate || "";
+            const itemAddedYear = itemAddedDate.substring(0, 4);
+            const itemCountry = itemEl.dataset.country || "";
+            const itemStatus = itemEl.dataset.status || "";
+
+            const matchType =
+                filters.type === "all" || filters.type === itemType;
+            const matchDirector =
+                filters.director === "all" ||
+                itemDirector.includes(filters.director);
+            const matchYear =
+                filters.year === "all" || filters.year === itemYear;
+            const matchAdded =
+                filters.added === "all" || filters.added === itemAddedYear;
+            const matchCountry =
+                filters.country === "all" ||
+                itemCountry.includes(filters.country);
+            const matchStatus =
+                filters.status === "all" || filters.status === itemStatus;
+
+            if (
+                matchType &&
+                matchDirector &&
+                matchYear &&
+                matchAdded &&
+                matchCountry &&
+                matchStatus
+            ) {
+                itemEl.style.display = "";
+            } else {
+                itemEl.style.display = "none";
+            }
+        });
+
+        updateStats();
+    }
+
+    function sortItems() {
+        if (!itemsContainer) return;
+
+        const itemsArray = Array.from(items) as HTMLElement[];
+
+        itemsArray.sort((a, b) => {
+            const [field, direction] = currentSort.split("-");
+            let aVal: string | number = "";
+            let bVal: string | number = "";
+
+            switch (field) {
+                case "added":
+                    aVal = a.dataset.addedDate || "1970-01-01";
+                    bVal = b.dataset.addedDate || "1970-01-01";
+                    break;
+                case "rating":
+                    aVal = parseFloat(a.dataset.rating || "0");
+                    bVal = parseFloat(b.dataset.rating || "0");
+                    break;
+                case "year":
+                    aVal = parseInt(a.dataset.year || "0");
+                    bVal = parseInt(b.dataset.year || "0");
+                    break;
+                case "title":
+                    aVal = a.dataset.title?.toLowerCase() || "";
+                    bVal = b.dataset.title?.toLowerCase() || "";
+                    break;
+            }
+
+            let result = 0;
+            if (typeof aVal === "string") {
+                result = aVal.localeCompare(bVal as string);
+            } else {
+                result = (aVal as number) - (bVal as number);
+            }
+
+            return direction === "desc" ? -result : result;
+        });
+
+        // Re-append in sorted order
+        itemsArray.forEach((item) => itemsContainer.appendChild(item));
+    }
+
+    // Filter chip click handler
+    chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+            const el = chip as HTMLElement;
+            const type = el.dataset.filterType!;
+            const value = el.dataset.value!;
+
+            document
+                .querySelectorAll(`.filter-chip[data-filter-type="${type}"]`)
+                .forEach((c) => c.classList.remove("active"));
+            el.classList.add("active");
+
+            filters[type] = value;
+            filterItems();
+        });
+    });
+
+    // Status filter handler
+    window.addEventListener("status-filter-change", ((e: CustomEvent) => {
+        filters.status = e.detail.status;
+        filterItems();
+    }) as EventListener);
+
+    // Sort handler
+    window.addEventListener("sort-change", ((e: CustomEvent) => {
+        currentSort = e.detail.sort;
+        sortItems();
+    }) as EventListener);
+</script>
+
+<style>
+    .filters-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    /* 响应式poster大小调整 - 屏幕越小，海报越小 */
+    @media (max-width: 768px) {
+        :root {
+            --disc-size: 110px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        :root {
+            --disc-size: 100px;
+        }
+
+        .filters-toolbar {
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+    }
+
+    @media (max-width: 360px) {
+        :root {
+            --disc-size: 90px;
+        }
+    }
+</style>

@@ -1,0 +1,861 @@
+---
+interface Props {
+  isOpen?: boolean;
+}
+
+const { isOpen = false } = Astro.props;
+---
+
+<div class="modal-overlay" id="detail-modal" data-open={isOpen}>
+  <div class="modal-backdrop"></div>
+
+  <div class="modal-content glass-effect">
+    <div class="modal-body">
+      <!-- Cover section -->
+      <div class="modal-cover">
+        <div class="cover-skeleton" id="modal-cover-skeleton"></div>
+        <img src="" alt="" class="cover-image" id="modal-cover-image" />
+      </div>
+
+      <!-- Info section -->
+      <div class="modal-info">
+        <div class="info-header">
+          <div class="header-main">
+            <span class="item-type" id="modal-type"></span>
+            <h2 class="item-title" id="modal-title"></h2>
+            <p class="item-creator" id="modal-creator"></p>
+          </div>
+          <div class="header-rating" id="modal-rating-container">
+            <span class="rating-score" id="modal-rating"></span>
+            <span class="rating-max">/10</span>
+          </div>
+        </div>
+
+        <div class="info-meta">
+          <div class="meta-item" id="modal-status-container">
+            <span class="meta-label">状态</span>
+            <span class="meta-value status" id="modal-status"></span>
+          </div>
+          <div class="meta-item" id="modal-genre-container">
+            <span class="meta-label">类型</span>
+            <span class="meta-value" id="modal-genre"></span>
+          </div>
+          <div class="meta-item" id="modal-year-container">
+            <span class="meta-label">发布年份</span>
+            <span class="meta-value" id="modal-year"></span>
+          </div>
+          <div class="meta-item" id="modal-publisher-container">
+            <span class="meta-label">出版社</span>
+            <span class="meta-value" id="modal-publisher"></span>
+          </div>
+          <div class="meta-item" id="modal-platform-container">
+            <span class="meta-label">平台</span>
+            <span class="meta-value" id="modal-platform"></span>
+          </div>
+          <div class="meta-item" id="modal-country-container">
+            <span class="meta-label">国家/地区</span>
+            <span class="meta-value" id="modal-country"></span>
+          </div>
+        </div>
+
+        <div class="info-notes" id="modal-notes-container">
+          <span class="notes-label">笔记</span>
+          <p class="notes-content" id="modal-notes"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Close button - positioned below card -->
+  <button class="modal-close focus-ring" aria-label="关闭">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+</div>
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+    gap: var(--space-md);
+    opacity: 0;
+    visibility: hidden;
+    /* Prevent blocking clicks when hidden */
+    pointer-events: none;
+    /* Prevent scroll on modal overlay */
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition:
+      opacity 0.4s ease-out,
+      visibility 0.4s ease-out;
+  }
+
+  .modal-overlay[data-open="true"],
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+
+  .modal-overlay.active .modal-backdrop {
+    opacity: 1;
+  }
+
+  .modal-content {
+    position: relative;
+    max-width: 600px;
+    width: 100%;
+    max-height: 70vh;
+    overflow: hidden;
+    border-radius: var(--border-radius-lg);
+    background: var(--bg-shelf);
+    border: 1px solid var(--border-subtle);
+    /* Convex card effect - raised with depth */
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 8px 24px rgba(0, 0, 0, 0.4),
+      0 0 80px var(--ambient-warm),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.4s ease-out;
+  }
+
+  .modal-overlay.active .modal-content {
+    transform: scale(1) translateY(0);
+  }
+
+  /* Light mode card */
+  :global([data-theme="light"]) .modal-content {
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.15),
+      0 8px 24px rgba(0, 0, 0, 0.1),
+      0 0 80px var(--ambient-warm),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border-top-color: rgba(255, 255, 255, 0.5);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Close button - positioned below card */
+  .modal-close {
+    position: relative;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-wall);
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    color: var(--text-secondary);
+    cursor: pointer;
+    /* Convex style - matching other buttons */
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.4),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 0.3s ease-out 0.2s,
+      transform 0.3s ease-out 0.2s,
+      background var(--transition-fast),
+      color var(--transition-fast),
+      box-shadow var(--transition-fast);
+  }
+
+  .modal-overlay.active .modal-close {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (hover: hover) {
+    .modal-close:hover {
+      background: var(--bg-shelf);
+      color: var(--text-primary);
+      box-shadow:
+        0 3px 6px rgba(0, 0, 0, 0.5),
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .modal-close:active {
+    transform: translateY(1px) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Light mode close button */
+  :global([data-theme="light"]) .modal-close {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.12),
+      0 1px 2px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border-top-color: rgba(255, 255, 255, 0.5);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  :global([data-theme="light"]) .modal-close:active {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .modal-body {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: var(--space-lg);
+    padding: var(--space-xl);
+    max-height: 70vh;
+    overflow-y: auto;
+    /* Match parent border-radius for scrollbar */
+    border-radius: var(--border-radius-lg);
+  }
+
+  /* Custom scrollbar styling for modal */
+  .modal-body::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .modal-body::-webkit-scrollbar-track {
+    background: transparent;
+    margin: var(--border-radius-lg) 0;
+  }
+
+  .modal-body::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 500px) {
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .modal-cover {
+      flex-shrink: 0;
+      max-width: 160px;
+      width: auto;
+      margin: 0 auto;
+    }
+  }
+
+  /* Skeleton loading placeholder */
+  .cover-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      110deg,
+      var(--bg-wall) 0%,
+      var(--bg-wall) 40%,
+      rgba(255, 255, 255, 0.08) 50%,
+      var(--bg-wall) 60%,
+      var(--bg-wall) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+    border-radius: inherit;
+    z-index: 3;
+    opacity: 1;
+    transition: opacity 0.4s ease-out;
+  }
+
+  .cover-skeleton.loaded {
+    opacity: 0;
+    pointer-events: none;
+    /* Delay fadeout so image has time to appear first */
+    transition-delay: 0.2s;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
+
+  .cover-image {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: block;
+    /* Start invisible, will fade in when loaded */
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.4s ease-out,
+      visibility 0.4s ease-out;
+    z-index: 2;
+  }
+
+  .cover-image.loaded {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Ensure modal-cover has relative positioning for skeleton */
+  .modal-cover {
+    position: relative;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    /* Prevent grid stretch - align to vertical center */
+    align-self: center;
+    /* Reserve space for image with book aspect ratio */
+    min-height: 200px;
+    /* Strong inset/sunken effect */
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-top-color: rgba(0, 0, 0, 0.4);
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+    box-shadow:
+      inset 0 4px 12px rgba(0, 0, 0, 0.5),
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  :global([data-theme="light"]) .modal-cover {
+    border-color: rgba(0, 0, 0, 0.15);
+    border-top-color: rgba(0, 0, 0, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.3);
+    box-shadow:
+      inset 0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 2px 4px rgba(0, 0, 0, 0.1),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  :global([data-theme="light"]) .cover-skeleton {
+    background: linear-gradient(
+      110deg,
+      var(--bg-wall) 0%,
+      var(--bg-wall) 40%,
+      rgba(0, 0, 0, 0.05) 50%,
+      var(--bg-wall) 60%,
+      var(--bg-wall) 100%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Info */
+  .modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .header-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Rating display - positioned right of header */
+  .header-rating {
+    display: flex;
+    align-items: baseline;
+    flex-shrink: 0;
+    padding-top: var(--space-sm);
+  }
+
+  .rating-score {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    /* Color based on score - will be set via JS */
+    color: var(--text-primary);
+    /* Letterpress effect */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.1),
+      0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  /* Rating colors */
+  .rating-score[data-rating="perfect"] {
+    color: var(--brass);
+    /* Elegant warm glow for perfect score */
+    text-shadow:
+      0 0 20px rgba(201, 169, 98, 0.6),
+      0 0 40px rgba(201, 169, 98, 0.3),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .rating-score[data-rating="high"] {
+    color: var(--velvet-green);
+  }
+
+  .rating-score[data-rating="medium"] {
+    color: var(--text-secondary);
+  }
+
+  .rating-score[data-rating="low"] {
+    color: var(--rating-low);
+  }
+
+  .rating-max {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  .item-type {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    /* Letterpress effect */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .item-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: var(--space-xs) 0;
+    line-height: 1.3;
+    /* Letterpress effect */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.1),
+      0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .item-creator {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    /* Letterpress effect */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08),
+      0 -1px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  .info-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .meta-label {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    /* Letterpress effect */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .meta-value {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    /* Letterpress effect */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08),
+      0 -1px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  /* Status badges with distinct colors - clean, no effects */
+  .meta-value.status {
+    padding: 2px 10px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #fff !important;
+    text-shadow: none !important;
+    /* Default: completed (green) */
+    background: var(--velvet-green);
+  }
+
+  /* Reading/Watching status - desaturated blue */
+  .meta-value.status[data-status="reading"],
+  .meta-value.status[data-status="watching"] {
+    background: #6b8cae;
+  }
+
+  /* Want to read/watch - muted gray */
+  .meta-value.status[data-status="want-to-read"],
+  .meta-value.status[data-status="want-to-watch"] {
+    background: var(--text-muted);
+  }
+
+  .info-notes {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .notes-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: var(--space-sm);
+    /* Letterpress effect */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .notes-content {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    /* Letterpress effect */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.08),
+      0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Light mode text adjustments */
+  :global([data-theme="light"]) .item-title,
+  :global([data-theme="light"]) .item-creator,
+  :global([data-theme="light"]) .meta-value,
+  :global([data-theme="light"]) .notes-content {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  :global([data-theme="light"]) .item-type,
+  :global([data-theme="light"]) .meta-label,
+  :global([data-theme="light"]) .notes-label {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  /* Hide empty containers */
+  .meta-item:empty,
+  .info-notes:empty {
+    display: none;
+  }
+</style>
+
+<script>
+  // Modal functionality
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("detail-modal");
+    const closeBtn = modal?.querySelector(".modal-close");
+    const backdrop = modal?.querySelector(".modal-backdrop");
+
+    // Modal elements
+    const coverImage = document.getElementById(
+      "modal-cover-image",
+    ) as HTMLImageElement;
+    const titleEl = document.getElementById("modal-title");
+    const creatorEl = document.getElementById("modal-creator");
+    const typeEl = document.getElementById("modal-type");
+    const ratingEl = document.getElementById("modal-rating");
+    const ratingContainer = document.getElementById("modal-rating-container");
+    const statusEl = document.getElementById("modal-status");
+    const statusContainer = document.getElementById("modal-status-container");
+    const genreEl = document.getElementById("modal-genre");
+    const genreContainer = document.getElementById("modal-genre-container");
+    const yearEl = document.getElementById("modal-year");
+    const yearContainer = document.getElementById("modal-year-container");
+    const publisherEl = document.getElementById("modal-publisher");
+    const publisherContainer = document.getElementById(
+      "modal-publisher-container",
+    );
+    const platformEl = document.getElementById("modal-platform");
+    const platformContainer = document.getElementById(
+      "modal-platform-container",
+    );
+    const countryEl = document.getElementById("modal-country");
+    const countryContainer = document.getElementById("modal-country-container");
+    const notesEl = document.getElementById("modal-notes");
+    const notesContainer = document.getElementById("modal-notes-container");
+
+    function openModal(data: Record<string, string | undefined>) {
+      if (!modal) return;
+
+      // Reset content immediately to prevent showing old data
+      if (titleEl) titleEl.textContent = "";
+      if (creatorEl) creatorEl.textContent = "";
+      if (typeEl) typeEl.textContent = "";
+      if (ratingEl) {
+        ratingEl.textContent = "";
+        ratingEl.removeAttribute("data-rating");
+      }
+      if (statusEl) {
+        statusEl.textContent = "";
+        statusEl.removeAttribute("data-status");
+      }
+      if (genreEl) genreEl.textContent = "";
+      if (yearEl) yearEl.textContent = "";
+      if (publisherEl) publisherEl.textContent = "";
+      if (platformEl) platformEl.textContent = "";
+      if (countryEl) countryEl.textContent = "";
+      if (notesEl) notesEl.textContent = "";
+
+      // Reset image - show skeleton loading state
+      const skeleton = document.getElementById("modal-cover-skeleton");
+      const modalCover = document.querySelector(".modal-cover") as HTMLElement;
+      if (coverImage) {
+        coverImage.classList.remove("loaded");
+        coverImage.src = "";
+      }
+      if (skeleton) {
+        skeleton.classList.remove("loaded");
+      }
+
+      // Now populate with new content
+      if (coverImage) {
+        const coverMap = (window as any).__OPTIMIZED_COVERS__ || {};
+        const originalCover = data.cover || "";
+        const coverInfo = coverMap[originalCover];
+        const newSrc = coverInfo?.src || originalCover;
+
+        // Set skeleton size based on image dimensions
+        if (coverInfo && modalCover) {
+          // Use aspect-ratio to ensure correct sizing on both desktop (180px width)
+          // and mobile (constrained width), avoiding whitespace
+          modalCover.style.aspectRatio = `${coverInfo.width} / ${coverInfo.height}`;
+          modalCover.style.minHeight = "auto";
+        }
+
+        // Preload image then show with reveal animation
+        if (newSrc) {
+          const img = new Image();
+          img.onload = () => {
+            coverImage.src = newSrc;
+            // Trigger reveal animation
+            requestAnimationFrame(() => {
+              coverImage.classList.add("loaded");
+              if (skeleton) skeleton.classList.add("loaded");
+            });
+          };
+          img.onerror = () => {
+            // Fallback: show even if error
+            coverImage.src = newSrc;
+            coverImage.classList.add("loaded");
+            if (skeleton) skeleton.classList.add("loaded");
+          };
+          img.src = newSrc;
+        }
+      }
+      if (titleEl) titleEl.textContent = data.title || "";
+
+      // Creator (author/artist/director)
+      const creator = data.author || data.artist || data.director || "";
+      if (creatorEl) creatorEl.textContent = creator;
+
+      // Type label
+      let typeLabel = "";
+      if (data.type === "movie") typeLabel = "🎬 电影";
+      else if (data.type === "series") typeLabel = "📺 剧集";
+      else if (data.artist) typeLabel = "🎵 音乐";
+      else if (data.author) typeLabel = "📚 书籍";
+      if (typeEl) typeEl.textContent = typeLabel;
+
+      // Rating - show score only, color by level
+      if (ratingEl && ratingContainer) {
+        if (data.rating) {
+          const score = parseFloat(data.rating);
+          ratingEl.textContent = data.rating;
+          // Set color based on score
+          if (score >= 10) {
+            ratingEl.setAttribute("data-rating", "perfect");
+          } else if (score >= 8) {
+            ratingEl.setAttribute("data-rating", "high");
+          } else if (score >= 6) {
+            ratingEl.setAttribute("data-rating", "medium");
+          } else {
+            ratingEl.setAttribute("data-rating", "low");
+          }
+          ratingContainer.style.display = "";
+        } else {
+          ratingEl.removeAttribute("data-rating");
+          ratingContainer.style.display = "none";
+        }
+      }
+
+      // Status
+      if (statusEl && statusContainer) {
+        const statusMap: Record<string, string> = {
+          reading: "阅读中",
+          completed: "已完成",
+          "want-to-read": "想读",
+          watching: "观看中",
+          "want-to-watch": "想看",
+        };
+        if (data.status) {
+          statusEl.textContent = statusMap[data.status] || data.status;
+          statusEl.setAttribute("data-status", data.status);
+          statusContainer.style.display = "";
+        } else {
+          statusEl.removeAttribute("data-status");
+          statusContainer.style.display = "none";
+        }
+      }
+
+      // Genre
+      if (genreEl && genreContainer) {
+        if (data.genre) {
+          genreEl.textContent = data.genre;
+          genreContainer.style.display = "";
+        } else {
+          genreContainer.style.display = "none";
+        }
+      }
+
+      // Year
+      if (yearEl && yearContainer) {
+        if (data.year) {
+          yearEl.textContent = data.year;
+          yearContainer.style.display = "";
+        } else {
+          yearContainer.style.display = "none";
+        }
+      }
+
+      // Publisher
+      if (publisherEl && publisherContainer) {
+        if (data.publisher) {
+          publisherEl.textContent = data.publisher;
+          publisherContainer.style.display = "";
+        } else {
+          publisherContainer.style.display = "none";
+        }
+      }
+
+      // Platform
+      if (platformEl && platformContainer) {
+        if (data.platform) {
+          platformEl.textContent = data.platform;
+          platformContainer.style.display = "";
+        } else {
+          platformContainer.style.display = "none";
+        }
+      }
+
+      // Country
+      if (countryEl && countryContainer) {
+        if (data.country) {
+          countryEl.textContent = data.country;
+          countryContainer.style.display = "";
+        } else {
+          countryContainer.style.display = "none";
+        }
+      }
+
+      if (notesEl && notesContainer) {
+        if (data.notes) {
+          notesEl.textContent = data.notes;
+          notesContainer.style.display = "";
+        } else {
+          notesContainer.style.display = "none";
+        }
+      }
+
+      modal.classList.add("active");
+      // Prevent body scroll with position fixed approach
+      const scrollY = window.scrollY;
+      document.body.style.setProperty("--scroll-y", `-${scrollY}px`);
+      document.body.classList.add("modal-open");
+    }
+
+    function closeModal() {
+      modal?.classList.remove("active");
+      // Restore body scroll and position
+      const scrollY = document.body.style.getPropertyValue("--scroll-y");
+      document.body.classList.remove("modal-open");
+      document.body.style.removeProperty("--scroll-y");
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+
+    // Event listeners
+    closeBtn?.addEventListener("click", closeModal);
+    backdrop?.addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    // Listen for clicks on items (book-spine is button, vinyl-sleeve and disc-case are now buttons too)
+    document
+      .querySelectorAll(".book-spine, .vinyl-sleeve, .disc-case")
+      .forEach((item) => {
+        item.addEventListener("click", (e) => {
+          // Prevent default behavior and stop propagation
+          e.preventDefault();
+          e.stopPropagation();
+
+          const el = item as HTMLElement;
+          openModal({
+            title: el.dataset.title,
+            author: el.dataset.author,
+            artist: el.dataset.artist,
+            director: el.dataset.director,
+            cover: el.dataset.cover,
+            rating: el.dataset.rating,
+            status: el.dataset.status,
+            genre: el.dataset.genre,
+            year: el.dataset.year,
+            type: el.dataset.type,
+            publisher: el.dataset.publisher,
+            platform: el.dataset.platform,
+            country: el.dataset.country,
+            notes: el.dataset.notes,
+          });
+        });
+      });
+
+    // Listen for open-detail-modal events from global search
+    window.addEventListener("open-detail-modal", ((e: CustomEvent) => {
+      const detail = e.detail;
+      if (detail) {
+        openModal(detail);
+      }
+    }) as EventListener);
+  });
+</script>

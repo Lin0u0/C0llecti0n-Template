@@ -1,0 +1,1674 @@
+---
+// 管理后台 - 仅供本地开发使用
+// 在 Vercel 部署时，此页面通过 vercel.json 的 rewrites 规则重定向到 404
+
+import Layout from "../../layouts/Layout.astro";
+import booksData from "../../data/books.json";
+import musicData from "../../data/music.json";
+import moviesData from "../../data/movies.json";
+import seriesData from "../../data/series.json";
+
+// Calculate stats
+const stats = {
+    books: booksData.length,
+    albums: musicData.length,
+    movies: moviesData.length,
+    series: seriesData.length,
+};
+
+const totalCount = stats.books + stats.albums + stats.movies + stats.series;
+
+// 本地 API 服务器地址
+const API_BASE = "http://localhost:4322/api";
+---
+
+<Layout
+    title="管理后台 - C0llecti0n"
+    description="管理媒体收藏"
+    stats={stats}
+    totalCount={totalCount}
+>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="header-left">
+                <a href="/" class="back-link">← 返回首页</a>
+                <h1 class="admin-title">管理后台</h1>
+            </div>
+            <div class="connection-status" id="connection-status">
+                <span class="status-dot"></span>
+                <span class="status-text">检查连接...</span>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="books">
+                📚 书籍 <span class="tab-count" id="count-books"
+                    >{stats.books}</span
+                >
+            </button>
+            <button class="tab-btn" data-tab="movies">
+                🎬 电影 <span class="tab-count" id="count-movies"
+                    >{stats.movies}</span
+                >
+            </button>
+            <button class="tab-btn" data-tab="series">
+                📺 剧集 <span class="tab-count" id="count-series"
+                    >{stats.series}</span
+                >
+            </button>
+            <button class="tab-btn" data-tab="music">
+                🎵 音乐 <span class="tab-count" id="count-music"
+                    >{stats.albums}</span
+                >
+            </button>
+        </nav>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="搜索..."
+                    class="search-input"
+                />
+            </div>
+            <div class="action-buttons">
+                <button class="refresh-btn" id="refresh-btn" title="刷新数据">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"
+                        ></path>
+                        <path d="M21 3v5h-5"></path>
+                    </svg>
+                </button>
+                <button class="add-btn" id="add-item-btn">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    添加
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Panels -->
+        <div class="tab-content">
+            <!-- Books Panel -->
+            <div class="tab-panel active" id="panel-books">
+                <div class="items-table">
+                    <div class="table-header">
+                        <span class="col-cover">封面</span>
+                        <span class="col-title">标题</span>
+                        <span class="col-creator">作者</span>
+                        <span class="col-status">状态</span>
+                        <span class="col-rating">评分</span>
+                        <span class="col-actions">操作</span>
+                    </div>
+                    <div class="table-body" id="books-list">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movies Panel -->
+            <div class="tab-panel" id="panel-movies">
+                <div class="items-table">
+                    <div class="table-header">
+                        <span class="col-cover">封面</span>
+                        <span class="col-title">标题</span>
+                        <span class="col-country">国家</span>
+                        <span class="col-status">状态</span>
+                        <span class="col-rating">评分</span>
+                        <span class="col-actions">操作</span>
+                    </div>
+                    <div class="table-body" id="movies-list">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Series Panel -->
+            <div class="tab-panel" id="panel-series">
+                <div class="items-table">
+                    <div class="table-header">
+                        <span class="col-cover">封面</span>
+                        <span class="col-title">标题</span>
+                        <span class="col-country">国家</span>
+                        <span class="col-status">状态</span>
+                        <span class="col-rating">评分</span>
+                        <span class="col-actions">操作</span>
+                    </div>
+                    <div class="table-body" id="series-list">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Music Panel -->
+            <div class="tab-panel" id="panel-music">
+                <div class="items-table">
+                    <div class="table-header">
+                        <span class="col-cover">封面</span>
+                        <span class="col-title">专辑</span>
+                        <span class="col-creator">艺术家</span>
+                        <span class="col-genre">类型</span>
+                        <span class="col-rating">评分</span>
+                        <span class="col-actions">操作</span>
+                    </div>
+                    <div class="table-body" id="music-list">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit/Add Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">编辑</h2>
+                <button class="modal-close-btn" id="modal-close">×</button>
+            </div>
+            <form class="edit-form" id="edit-form">
+                <input type="hidden" id="form-id" name="id" />
+                <input type="hidden" id="form-type" name="type" />
+
+                <div class="form-group">
+                    <label for="form-title">标题 *</label>
+                    <input type="text" id="form-title" name="title" required />
+                </div>
+
+                <!-- Book-specific fields -->
+                <div class="form-group book-field">
+                    <label for="form-author">作者</label>
+                    <input type="text" id="form-author" name="author" />
+                </div>
+
+                <div class="form-group book-field">
+                    <label for="form-publisher">出版社</label>
+                    <input type="text" id="form-publisher" name="publisher" />
+                </div>
+
+                <!-- Music-specific fields -->
+                <div class="form-group music-field">
+                    <label for="form-artist">艺术家</label>
+                    <input type="text" id="form-artist" name="artist" />
+                </div>
+
+                <div class="form-group music-field">
+                    <label for="form-genre">类型</label>
+                    <input type="text" id="form-genre" name="genre" />
+                </div>
+
+                <!-- Movie/Series fields -->
+                <div class="form-group movie-field series-field">
+                    <label for="form-director">导演</label>
+                    <input type="text" id="form-director" name="director" />
+                </div>
+
+                <!-- Common fields -->
+                <div class="form-group">
+                    <label for="form-country">国家/地区</label>
+                    <input type="text" id="form-country" name="country" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="form-year">年份</label>
+                        <input
+                            type="number"
+                            id="form-year"
+                            name="year"
+                            min="1900"
+                            max="2100"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="form-rating">评分 (1-10)</label>
+                        <input
+                            type="number"
+                            id="form-rating"
+                            name="rating"
+                            min="1"
+                            max="10"
+                            step="0.5"
+                        />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="form-status">状态</label>
+                    <select id="form-status" name="status">
+                        <option value="completed">已完成</option>
+                        <option value="reading">阅读中</option>
+                        <option value="watching">观看中</option>
+                        <option value="want-to-read">想读</option>
+                        <option value="want-to-watch">想看</option>
+                    </select>
+                </div>
+
+                <div class="form-group book-field">
+                    <label for="form-platform">平台</label>
+                    <input
+                        type="text"
+                        id="form-platform"
+                        name="platform"
+                        placeholder="微信读书 / 纸质书"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="form-cover">封面路径</label>
+                    <input
+                        type="text"
+                        id="form-cover"
+                        name="cover"
+                        placeholder="/covers/xxx.jpg"
+                    />
+                    <span class="form-hint"
+                        >封面文件放在 src/assets/covers/ 目录下</span
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="form-added-date">添加日期</label>
+                    <input type="date" id="form-added-date" name="addedDate" />
+                </div>
+
+                <div class="form-group">
+                    <label for="form-notes">笔记</label>
+                    <textarea id="form-notes" name="notes" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="form-cancel"
+                        >取消</button
+                    >
+                    <button type="submit" class="submit-btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+</Layout>
+
+<style>
+    .admin-container {
+        padding: var(--space-lg);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-xl);
+        padding-bottom: var(--space-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-left {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color var(--transition-fast);
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+    }
+
+    .admin-title {
+        font-size: 2rem;
+        color: var(--text-primary);
+        text-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.1),
+            0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    /* Connection Status */
+    .connection-status {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: 8px 16px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        animation: pulse 2s infinite;
+    }
+
+    .connection-status.connected .status-dot {
+        background: var(--velvet-green);
+        animation: none;
+    }
+
+    .connection-status.disconnected .status-dot {
+        background: #ef4444;
+        animation: none;
+    }
+
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        flex-wrap: wrap;
+    }
+
+    /* 类别标签按钮 - 参考 category-pill */
+    .tab-btn {
+        padding: 8px 16px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        /* Dark mode: raised (convex) button */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.08);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .tab-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+            background: var(--bg-shelf);
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .tab-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-btn.active {
+        background: var(--bg-shelf);
+        color: var(--text-primary);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Light mode */
+    :global([data-theme="light"]) .tab-btn {
+        color: var(--text-secondary);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.12),
+            0 1px 2px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    @media (hover: hover) {
+        :global([data-theme="light"]) .tab-btn:hover {
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.15),
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        }
+    }
+
+    :global([data-theme="light"]) .tab-btn:active,
+    :global([data-theme="light"]) .tab-btn.active {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .tab-count {
+        background: var(--bg-room);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .tab-btn.active .tab-count {
+        background: var(--bg-room);
+        color: #000;
+    }
+
+    /* Action Bar */
+    .action-bar {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--space-lg);
+        gap: var(--space-md);
+    }
+
+    .search-box {
+        flex: 1;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: var(--space-sm);
+        flex-shrink: 0;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 16px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all var(--transition-fast);
+        /* 凹陷效果 */
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow:
+            inset 0 2px 4px rgba(0, 0, 0, 0.2),
+            0 0 0 3px rgba(229, 193, 88, 0.2);
+    }
+
+    :global([data-theme="light"]) .search-input {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    :global([data-theme="light"]) .search-input:focus {
+        box-shadow:
+            inset 0 2px 4px rgba(0, 0, 0, 0.08),
+            0 0 0 3px rgba(204, 158, 46, 0.2);
+    }
+
+    /* 刷新按钮 */
+    .refresh-btn {
+        padding: 10px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        /* Dark mode: raised (convex) button */
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.08);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .refresh-btn:hover {
+            background: var(--bg-shelf);
+            border-color: var(--text-muted);
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .refresh-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    :global([data-theme="light"]) .refresh-btn {
+        color: var(--text-secondary);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.12),
+            0 1px 2px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    :global([data-theme="light"]) .refresh-btn:active {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .refresh-btn.loading svg {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* 添加按钮 - 绿色主题 */
+    .add-btn {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: 8px 16px;
+        background: var(--velvet-green);
+        border: 1px solid var(--velvet-green);
+        border-radius: 20px;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        /* Convex effect */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.15);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .add-btn:hover {
+            background: #3a7042;
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .add-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .add-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+        display: none;
+    }
+
+    .tab-panel.active {
+        display: block;
+    }
+
+    /* Table Styles */
+    .items-table {
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 60px 1fr 150px 100px 80px 120px;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        background: var(--bg-shelf);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--border-subtle);
+        align-items: center;
+    }
+
+    /* 表头列样式 - 覆盖全局 col-* 样式 */
+    .table-header span {
+        height: auto;
+        display: block;
+    }
+
+    .table-body {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .table-body:empty::after {
+        content: "暂无数据";
+        display: block;
+        padding: var(--space-xl);
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    /* 使用 :global() 确保动态生成的元素也能应用样式 */
+    :global(.table-row) {
+        display: grid;
+        grid-template-columns: 60px 1fr 150px 100px 80px 120px;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        align-items: center;
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background var(--transition-fast);
+    }
+
+    :global(.table-row:hover) {
+        background: var(--bg-shelf);
+    }
+
+    :global(.table-row:last-child) {
+        border-bottom: none;
+    }
+
+    :global(.col-cover) {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    :global(.item-cover) {
+        width: 40px;
+        height: 56px;
+        max-width: 40px;
+        max-height: 56px;
+        object-fit: cover;
+        border-radius: var(--border-radius-sm);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        background: var(--bg-shelf);
+        flex-shrink: 0;
+    }
+
+    :global(.col-title) {
+        font-weight: 500;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    :global(.col-creator),
+    :global(.col-country),
+    :global(.col-genre) {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    :global(.col-rating) {
+        color: var(-text-secondary);
+        font-weight: 600;
+    }
+
+    :global(.status-badge) {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #fff;
+    }
+
+    :global(.status-badge.completed) {
+        background: var(--velvet-green);
+    }
+
+    :global(.status-badge.reading),
+    :global(.status-badge.watching) {
+        background: #6b8cae;
+    }
+
+    :global(.status-badge.want-to-read),
+    :global(.status-badge.want-to-watch) {
+        background: var(--text-muted);
+    }
+
+    :global(.col-actions) {
+        display: flex;
+        gap: var(--space-xs);
+    }
+
+    /* 编辑和删除按钮 - 参考 category-pill 胶囊风格 */
+    :global(.edit-btn),
+    :global(.delete-btn) {
+        padding: 4px 12px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        /* Dark mode: raised (convex) button */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.08);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    :global(.edit-btn) {
+        background: var(--bg-wall);
+        color: var(--text-primary);
+    }
+
+    @media (hover: hover) {
+        :global(.edit-btn:hover) {
+            background: var(--bg-shelf);
+            border-color: var(--text-muted);
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    :global(.edit-btn:active) {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Light mode edit button */
+    :global([data-theme="light"]) :global(.edit-btn) {
+        color: var(--text-secondary);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.12),
+            0 1px 2px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    :global([data-theme="light"]) :global(.edit-btn:active) {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    /* 删除按钮 - 红色主题 */
+    :global(.delete-btn) {
+        background: var(--rating-low);
+        color: #fff;
+        border-color: var(--rating-low);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.15);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        :global(.delete-btn:hover) {
+            background: #a04040;
+            border-color: #a04040;
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    :global(.delete-btn:active) {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 评分颜色 - 使用主站逻辑 */
+    :global(.col-rating) {
+        font-weight: 600;
+    }
+
+    :global(.col-rating[data-rating="perfect"]) {
+        color: var(--brass);
+        text-shadow: 0 0 8px rgba(229, 193, 88, 0.5);
+    }
+
+    :global(.col-rating[data-rating="high"]) {
+        color: var(--velvet-green);
+    }
+
+    :global(.col-rating[data-rating="medium"]) {
+        color: var(--text-secondary);
+    }
+
+    :global(.col-rating[data-rating="low"]) {
+        color: var(--rating-low);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+    }
+
+    .modal-content {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--bg-shelf);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-lg);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        color: var(--text-primary);
+    }
+
+    .modal-close-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+        border-radius: var(--border-radius-sm);
+        transition: all var(--transition-fast);
+    }
+
+    .modal-close-btn:hover {
+        background: var(--bg-wall);
+        color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .edit-form {
+        padding: var(--space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px 14px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: inherit;
+        transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--brass);
+        box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.2);
+    }
+
+    .form-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--space-md);
+        margin-top: var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    /* 表单按钮 - 参考 category-pill */
+    .cancel-btn,
+    .submit-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        border: 1px solid var(--border-subtle);
+    }
+
+    /* 取消按钮 */
+    .cancel-btn {
+        background: var(--bg-wall);
+        color: var(--text-primary);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.08);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .cancel-btn:hover {
+            background: var(--bg-shelf);
+            border-color: var(--text-muted);
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .cancel-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    :global([data-theme="light"]) .cancel-btn {
+        color: var(--text-secondary);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.12),
+            0 1px 2px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    :global([data-theme="light"]) .cancel-btn:active {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    /* 提交按钮 - 绿色主题 */
+    .submit-btn {
+        background: var(--velvet-green);
+        border-color: var(--velvet-green);
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.15);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .submit-btn:hover {
+            background: #3a7042;
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .submit-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Hide fields based on type */
+    .book-field,
+    .music-field,
+    .movie-field,
+    .series-field {
+        display: none;
+    }
+
+    [data-form-type="book"] .book-field,
+    [data-form-type="books"] .book-field {
+        display: flex;
+    }
+
+    [data-form-type="music"] .music-field {
+        display: flex;
+    }
+
+    [data-form-type="movie"] .movie-field,
+    [data-form-type="movies"] .movie-field {
+        display: flex;
+    }
+
+    [data-form-type="series"] .series-field {
+        display: flex;
+    }
+
+    /* Toast */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        padding: 12px 24px;
+        background: var(--bg-shelf);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 10001;
+    }
+
+    .toast.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+        border-color: var(--velvet-green);
+    }
+
+    .toast.error {
+        border-color: #ef4444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .table-header,
+        .table-row {
+            grid-template-columns: 50px 1fr 80px 80px;
+        }
+
+        .col-creator,
+        .col-country,
+        .col-genre {
+            display: none;
+        }
+
+        .tab-nav {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            flex-shrink: 0;
+        }
+
+        .action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            max-width: none;
+        }
+
+        .action-bar > :last-child {
+            justify-content: flex-end;
+            display: flex;
+            gap: var(--space-sm);
+        }
+    }
+</style>
+
+<script define:vars={{ API_BASE }}>
+    // API 基础地址
+    const apiBase = API_BASE;
+
+    // 当前数据缓存
+    let dataCache = {
+        books: [],
+        movies: [],
+        series: [],
+        music: [],
+    };
+
+    // 从 sessionStorage 恢复之前的 tab，默认为 'books'
+    let currentTab = sessionStorage.getItem("admin_current_tab") || "books";
+    let isConnected = false;
+
+    // DOM 元素
+    const connectionStatus = document.getElementById("connection-status");
+    const statusText = connectionStatus?.querySelector(".status-text");
+    const addBtn = document.getElementById("add-item-btn");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const modal = document.getElementById("edit-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const form = document.getElementById("edit-form");
+    const closeBtn = document.getElementById("modal-close");
+    const cancelBtn = document.getElementById("form-cancel");
+    const toast = document.getElementById("toast");
+
+    // 设置初始 Tab 状态
+    function initTabState() {
+        // 更新按钮状态
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+            if (btn.getAttribute("data-tab") === currentTab) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+
+        // 更新面板显示
+        document.querySelectorAll(".tab-panel").forEach((panel) => {
+            if (panel.id === `panel-${currentTab}`) {
+                panel.classList.add("active");
+            } else {
+                panel.classList.remove("active");
+            }
+        });
+    }
+
+    // 检查 API 连接
+    async function checkConnection() {
+        try {
+            const response = await fetch(`${apiBase}/books`, { method: "GET" });
+            if (response.ok) {
+                isConnected = true;
+                connectionStatus?.classList.add("connected");
+                connectionStatus?.classList.remove("disconnected");
+                if (statusText) statusText.textContent = "API 已连接";
+                if (addBtn) addBtn.disabled = false;
+                return true;
+            }
+        } catch (e) {
+            // Connection failed
+        }
+
+        isConnected = false;
+        connectionStatus?.classList.add("disconnected");
+        connectionStatus?.classList.remove("connected");
+        if (statusText)
+            statusText.textContent = "API 未连接 - 请运行 npm run admin-server";
+        if (addBtn) addBtn.disabled = true;
+        return false;
+    }
+
+    // 获取数据
+    async function fetchData(type) {
+        if (!isConnected) return [];
+
+        try {
+            const response = await fetch(`${apiBase}/${type}`);
+            if (response.ok) {
+                const data = await response.json();
+                dataCache[type] = data;
+                return data;
+            }
+        } catch (e) {
+            console.error(`Failed to fetch ${type}:`, e);
+        }
+        return [];
+    }
+
+    // 刷新所有数据
+    async function refreshAllData() {
+        refreshBtn?.classList.add("loading");
+
+        await Promise.all([
+            fetchData("books"),
+            fetchData("movies"),
+            fetchData("series"),
+            fetchData("music"),
+        ]);
+
+        // 更新计数
+        updateCounts();
+
+        // 重新渲染当前标签页
+        renderList(currentTab);
+
+        refreshBtn?.classList.remove("loading");
+        showToast("数据已刷新", "success");
+    }
+
+    // 更新计数
+    function updateCounts() {
+        if (!dataCache.books) return;
+
+        const countBooks = document.getElementById("count-books");
+        if (countBooks) countBooks.textContent = dataCache.books.length;
+
+        const countMovies = document.getElementById("count-movies");
+        if (countMovies) countMovies.textContent = dataCache.movies.length;
+
+        const countSeries = document.getElementById("count-series");
+        if (countSeries) countSeries.textContent = dataCache.series.length;
+
+        const countMusic = document.getElementById("count-music");
+        if (countMusic) countMusic.textContent = dataCache.music.length;
+    }
+
+    // ... (中间代码省略，如保留原样可减少上下文，但此处为确保完整性，我还是保留主要逻辑) ...
+
+    // 状态文本映射
+    function getStatusText(status, type) {
+        const map = {
+            completed: "已完成",
+            reading: "阅读中",
+            watching: "观看中",
+            "want-to-read": "想读",
+            "want-to-watch": "想看",
+        };
+        return map[status] || status || "-";
+    }
+
+    // 获取封面图片 URL (使用优化后的图片映射)
+    function getCoverUrl(coverPath) {
+        if (!coverPath) return "";
+        // 使用 Astro 生成的优化图片映射
+        const coverMap = window.__OPTIMIZED_COVERS__ || {};
+        const coverInfo = coverMap[coverPath];
+        return coverInfo?.src || coverPath;
+    }
+
+    // 渲染列表
+    function renderList(type) {
+        const container = document.getElementById(`${type}-list`);
+        if (!container) return;
+
+        const data = dataCache[type] || [];
+
+        if (data.length === 0) {
+            container.innerHTML = "";
+            return;
+        }
+
+        container.innerHTML = data
+            .map((item) => {
+                const creator =
+                    item.author ||
+                    item.artist ||
+                    item.director ||
+                    item.country ||
+                    "-";
+                const statusClass = item.status || "completed";
+                const statusText = getStatusText(item.status, type);
+                const coverUrl = getCoverUrl(item.cover);
+
+                // 评分等级 (与主站逻辑一致)
+                let ratingLevel = "";
+                if (item.rating) {
+                    const score = parseFloat(item.rating);
+                    if (score >= 10) ratingLevel = "perfect";
+                    else if (score >= 8) ratingLevel = "high";
+                    else if (score >= 6) ratingLevel = "medium";
+                    else ratingLevel = "low";
+                }
+
+                return `
+        <div class="table-row" data-id="${item.id}" data-type="${type}">
+          <span class="col-cover">
+            <img src="${coverUrl}" alt="${item.title}" class="item-cover" onerror="this.style.visibility='hidden'" />
+          </span>
+          <span class="col-title">${item.title || "-"}</span>
+          <span class="col-creator">${creator}</span>
+          <span class="col-status">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </span>
+          <span class="col-rating" data-rating="${ratingLevel}">${item.rating || "-"}</span>
+          <span class="col-actions">
+            <button class="edit-btn" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>编辑</button>
+            <button class="delete-btn" data-id="${item.id}" data-title="${(item.title || "").replace(/"/g, "&quot;")}">删除</button>
+          </span>
+        </div>
+      `;
+            })
+            .join("");
+
+        // 绑定编辑和删除按钮事件
+        container.querySelectorAll(".edit-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const itemData = JSON.parse(
+                    btn.getAttribute("data-item") || "{}",
+                );
+                openModal(true, type, itemData);
+            });
+        });
+
+        container.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", () =>
+                handleDelete(
+                    type,
+                    btn.getAttribute("data-id"),
+                    btn.getAttribute("data-title"),
+                ),
+            );
+        });
+    }
+
+    // 打开模态框
+    function openModal(isEdit = false, itemType = "books", itemData = null) {
+        if (!modal || !modalTitle || !form) return;
+
+        modalTitle.textContent = isEdit ? "编辑" : "添加";
+        form.setAttribute("data-form-type", itemType);
+        document.getElementById("form-type").value = itemType;
+
+        if (isEdit && itemData) {
+            document.getElementById("form-id").value = itemData.id || "";
+            document.getElementById("form-title").value = itemData.title || "";
+            document.getElementById("form-author").value =
+                itemData.author || "";
+            document.getElementById("form-artist").value =
+                itemData.artist || "";
+            document.getElementById("form-publisher").value =
+                itemData.publisher || "";
+            document.getElementById("form-director").value =
+                itemData.director || "";
+            document.getElementById("form-country").value =
+                itemData.country || "";
+            document.getElementById("form-year").value = itemData.year || "";
+            document.getElementById("form-rating").value =
+                itemData.rating || "";
+            document.getElementById("form-status").value =
+                itemData.status || "completed";
+            document.getElementById("form-platform").value =
+                itemData.platform || "";
+            document.getElementById("form-cover").value = itemData.cover || "";
+            document.getElementById("form-genre").value = itemData.genre || "";
+            document.getElementById("form-added-date").value =
+                itemData.addedDate || "";
+            document.getElementById("form-notes").value = itemData.notes || "";
+        } else {
+            form.reset();
+            document.getElementById("form-id").value = "";
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("form-added-date").value = today;
+        }
+
+        modal.classList.add("active");
+    }
+
+    function closeModal() {
+        modal?.classList.remove("active");
+    }
+
+    // 保存数据
+    async function handleSave(e) {
+        e.preventDefault();
+        if (!isConnected) {
+            showToast("API 未连接", "error");
+            return;
+        }
+
+        const formData = new FormData(form);
+        const type = formData.get("type");
+        const id = formData.get("id");
+
+        const data = {};
+        formData.forEach((value, key) => {
+            if (value && key !== "type" && key !== "id") {
+                if (key === "year" || key === "rating") {
+                    const num = parseFloat(value);
+                    if (!isNaN(num)) data[key] = num;
+                } else {
+                    data[key] = value;
+                }
+            }
+        });
+
+        // 为电影/剧集添加 type 字段
+        if (type === "movies") {
+            data.type = "movie";
+        } else if (type === "series") {
+            data.type = "series";
+        }
+
+        try {
+            const isEdit = !!id;
+            const url = isEdit
+                ? `${apiBase}/${type}/${id}`
+                : `${apiBase}/${type}`;
+            const method = isEdit ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+                showToast(isEdit ? "更新成功" : "添加成功", "success");
+                closeModal();
+                await fetchData(type);
+                updateCounts();
+                // 保持在当前标签页渲染
+                renderList(currentTab);
+            } else {
+                const error = await response.json();
+                showToast(error.message || "保存失败", "error");
+            }
+        } catch (e) {
+            showToast("保存失败: " + e.message, "error");
+        }
+    }
+
+    // 删除数据
+    async function handleDelete(type, id, title) {
+        if (!isConnected) {
+            showToast("API 未连接", "error");
+            return;
+        }
+
+        const confirmMsg = `确定要删除「${title || id}」吗？\n\n此操作无法撤销！`;
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const response = await fetch(`${apiBase}/${type}/${id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                showToast("删除成功", "success");
+                await fetchData(type);
+                updateCounts();
+                renderList(type);
+            } else {
+                showToast("删除失败", "error");
+            }
+        } catch (e) {
+            showToast("删除失败: " + e.message, "error");
+        }
+    }
+
+    // 显示 Toast
+    function showToast(message, type = "success") {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    // 搜索功能
+    function handleSearch(query) {
+        const q = query.toLowerCase();
+        const container = document.getElementById(`${currentTab}-list`);
+        const rows = container?.querySelectorAll(".table-row");
+
+        rows?.forEach((row) => {
+            const title =
+                row.querySelector(".col-title")?.textContent?.toLowerCase() ||
+                "";
+            const creator =
+                row.querySelector(".col-creator")?.textContent?.toLowerCase() ||
+                "";
+            row.style.display =
+                title.includes(q) || creator.includes(q) ? "" : "none";
+        });
+    }
+
+    // Tab 切换
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const tab = btn.getAttribute("data-tab");
+            if (!tab) return;
+
+            currentTab = tab;
+            // 保存当前标签页状态
+            sessionStorage.setItem("admin_current_tab", tab);
+
+            document
+                .querySelectorAll(".tab-btn")
+                .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            document.querySelectorAll(".tab-panel").forEach((panel) => {
+                panel.classList.toggle("active", panel.id === `panel-${tab}`);
+            });
+
+            renderList(tab);
+        });
+    });
+
+    // 事件绑定
+    addBtn?.addEventListener("click", () => openModal(false, currentTab));
+    refreshBtn?.addEventListener("click", refreshAllData);
+    closeBtn?.addEventListener("click", closeModal);
+    cancelBtn?.addEventListener("click", closeModal);
+    modal
+        ?.querySelector(".modal-backdrop")
+        ?.addEventListener("click", closeModal);
+    form?.addEventListener("submit", handleSave);
+    document
+        .getElementById("search-input")
+        ?.addEventListener("input", (e) => handleSearch(e.target.value));
+
+    // 初始化
+    async function init() {
+        initTabState(); // 初始化标签页状态
+        const connected = await checkConnection();
+        if (connected) {
+            await refreshAllData();
+        }
+    }
+
+    init();
+</script>

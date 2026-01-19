@@ -1,0 +1,74 @@
+---
+import DetailModal from "../components/DetailModal.astro";
+import GlobalSearch from "../components/GlobalSearch.astro";
+import Footer from "../components/Footer.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
+import OptimizedCovers from "../components/OptimizedCovers.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  stats?: {
+    books?: number;
+    albums?: number;
+    movies?: number;
+    series?: number;
+  };
+  totalCount?: number;
+  isHome?: boolean;
+}
+
+const {
+  title = "Lin0u0 - 书房",
+  description = "我的书籍、电影、音乐收藏",
+  stats,
+  totalCount,
+  isHome,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- Optimized cover images for modal -->
+    <OptimizedCovers />
+  </head>
+
+  <body>
+    <main style="flex: 1;">
+      <slot />
+    </main>
+    <ThemeToggle />
+    <Footer stats={stats} totalCount={totalCount} isHome={isHome} />
+    <DetailModal />
+    <GlobalSearch />
+  </body>
+</html>
+
+<script>
+  // Ensure theme is applied to html on load to prevent flash
+  const theme = localStorage.getItem("theme") || "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+</script>
+
+<style is:global>
+  @import "../styles/global.css";
+  @import "../styles/textures.css";
+  @import "../styles/animations.css";
+</style>

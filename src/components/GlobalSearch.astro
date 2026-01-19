@@ -1,0 +1,678 @@
+---
+/**
+ * GlobalSearch - Spotlight-style global search modal
+ * Triggered by Cmd+K (Mac) or Ctrl+K (Windows)
+ * Uses client-side fuzzy search for instant results
+ */
+
+import booksData from "../data/books.json";
+import musicData from "../data/music.json";
+import moviesData from "../data/movies.json";
+import seriesData from "../data/series.json";
+
+// Prepare search index data for client-side
+const allItems = [
+    ...booksData.map((b) => ({
+        id: b.id,
+        title: b.title,
+        creator: b.author,
+        type: "book" as const,
+        cover: b.cover,
+        year: b.year,
+        country: b.country,
+        rating: b.rating,
+        status: b.status,
+        addedDate: b.addedDate,
+        platform: b.platform,
+        publisher: b.publisher,
+        notes: b.notes,
+    })),
+    ...musicData.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        creator: m.artist,
+        type: "album" as const,
+        cover: m.cover,
+        year: m.year,
+        country: m.country,
+        rating: m.rating,
+        addedDate: m.addedDate,
+        genre: m.genre,
+    })),
+    ...moviesData.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        creator: m.director,
+        type: "movie" as const,
+        cover: m.cover,
+        year: m.year,
+        country: m.country,
+        rating: m.rating,
+        status: m.status,
+        addedDate: m.addedDate,
+        genre: m.genre,
+    })),
+    ...seriesData.map((s: any) => ({
+        id: s.id,
+        title: s.title,
+        creator: s.director,
+        type: "series" as const,
+        cover: s.cover,
+        year: s.year,
+        country: s.country,
+        rating: s.rating,
+        status: s.status,
+        addedDate: s.addedDate,
+        genre: s.genre,
+    })),
+];
+---
+
+<!-- Search overlay -->
+<div class="search-overlay" id="global-search" data-open="false">
+    <div class="search-backdrop"></div>
+
+    <div class="search-container">
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <svg
+                    class="search-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                    type="text"
+                    class="search-input"
+                    id="search-input"
+                    placeholder="搜索书籍、电影、音乐..."
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <kbd class="search-shortcut">ESC</kbd>
+            </div>
+
+            <div class="search-results" id="search-results">
+                <div class="search-hint">
+                    <span class="hint-text"
+                        >输入关键词搜索标题、作者、导演或笔记</span
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inject search data -->
+<script define:vars={{ allItems }}>
+    window.__SEARCH_DATA__ = allItems;
+</script>
+
+<style>
+    .search-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20000;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 15vh;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+            opacity 0.2s ease-out,
+            visibility 0.2s ease-out;
+    }
+
+    .search-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .search-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .search-container {
+        position: relative;
+        width: 100%;
+        max-width: 560px;
+        padding: 0 var(--space-md);
+    }
+
+    .search-box {
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        /* Convex card effect */
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.6),
+            0 8px 24px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        border-top-color: rgba(255, 255, 255, 0.1);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+        transform: scale(0.98) translateY(-10px);
+        transition: transform 0.2s ease-out;
+    }
+
+    .search-overlay.active .search-box {
+        transform: scale(1) translateY(0);
+    }
+
+    :global([data-theme="light"]) .search-box {
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.15),
+            0 8px 24px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.5);
+        border-bottom-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .search-input-wrapper {
+        display: flex;
+        align-items: center;
+        padding: var(--space-md) var(--space-lg);
+        gap: var(--space-md);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .search-icon {
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    .search-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-family: var(--font-body);
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        caret-color: var(--brass);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .search-shortcut {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        background: var(--bg-shelf);
+        padding: 2px 6px;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-subtle);
+        flex-shrink: 0;
+    }
+
+    .search-results {
+        max-height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .search-results::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .search-results::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .search-results::-webkit-scrollbar-thumb {
+        background: var(--text-muted);
+        border-radius: 3px;
+    }
+
+    :global(.search-hint) {
+        padding: var(--space-xl);
+        text-align: center;
+    }
+
+    :global(.hint-text) {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* Result items - use :global() for JS injected content */
+    :global(.search-result) {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    :global(.search-result:last-child) {
+        border-bottom: none;
+    }
+
+    :global(.search-result:hover),
+    :global(.search-result.selected) {
+        background: var(--bg-shelf);
+    }
+
+    :global(.result-cover) {
+        width: 40px;
+        height: 56px;
+        border-radius: var(--border-radius-sm);
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--bg-shelf);
+    }
+
+    /* Square cover for music */
+    :global(.result-cover.album) {
+        height: 40px;
+    }
+
+    :global(.result-info) {
+        flex: 1;
+        min-width: 0;
+    }
+
+    :global(.result-title) {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+
+    :global(.result-meta) {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    :global(.result-type) {
+        background: var(--bg-wall);
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+    }
+
+    :global(.result-rating) {
+        color: var(--brass);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    :global(.no-results) {
+        padding: var(--space-xl);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* Keyboard navigation indicator */
+    :global(.keyboard-nav-hint) {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-lg);
+        padding: var(--space-sm) var(--space-lg);
+        border-top: 1px solid var(--border-subtle);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    :global(.nav-hint-item) {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    :global(.nav-hint-item kbd) {
+        font-family: var(--font-mono);
+        background: var(--bg-shelf);
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 0.65rem;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 600px) {
+        .search-overlay {
+            padding-top: var(--space-lg);
+        }
+
+        .search-shortcut {
+            display: none;
+        }
+
+        :global(.result-cover) {
+            width: 36px;
+            height: 50px;
+        }
+
+        :global(.result-cover.album) {
+            height: 36px;
+        }
+    }
+</style>
+
+<script>
+    // Global Search functionality
+    document.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById("global-search");
+        const input = document.getElementById(
+            "search-input",
+        ) as HTMLInputElement;
+        const results = document.getElementById("search-results");
+        const searchData = (window as any).__SEARCH_DATA__ || [];
+
+        let selectedIndex = -1;
+        let currentResults: any[] = [];
+
+        // Simple fuzzy search implementation
+        function fuzzyMatch(text: string, query: string): boolean {
+            if (!text || !query) return false;
+            text = text.toLowerCase();
+            query = query.toLowerCase();
+
+            // Direct substring match
+            if (text.includes(query)) return true;
+
+            // Character-by-character fuzzy match
+            let queryIndex = 0;
+            for (let i = 0; i < text.length && queryIndex < query.length; i++) {
+                if (text[i] === query[queryIndex]) {
+                    queryIndex++;
+                }
+            }
+            return queryIndex === query.length;
+        }
+
+        function search(query: string) {
+            if (!query.trim()) {
+                showHint();
+                return;
+            }
+
+            const q = query.toLowerCase().trim();
+
+            currentResults = searchData.filter((item: any) => {
+                const fields = [
+                    item.title,
+                    item.creator,
+                    item.notes,
+                    item.country,
+                    item.genre,
+                ].filter(Boolean);
+
+                return fields.some((field: string) => fuzzyMatch(field, q));
+            });
+
+            // Sort by relevance (title match first, then creator)
+            currentResults.sort((a: any, b: any) => {
+                const aTitle = a.title?.toLowerCase() || "";
+                const bTitle = b.title?.toLowerCase() || "";
+                const aExact = aTitle.includes(q);
+                const bExact = bTitle.includes(q);
+
+                if (aExact && !bExact) return -1;
+                if (bExact && !aExact) return 1;
+                return 0;
+            });
+
+            // Limit results
+            currentResults = currentResults.slice(0, 20);
+            selectedIndex = currentResults.length > 0 ? 0 : -1;
+
+            renderResults();
+        }
+
+        function showHint() {
+            currentResults = [];
+            selectedIndex = -1;
+            if (results) {
+                results.innerHTML = `
+          <div class="search-hint">
+            <span class="hint-text">输入关键词搜索标题、作者、导演或笔记</span>
+          </div>
+        `;
+            }
+        }
+
+        function getTypeLabel(type: string): string {
+            const labels: Record<string, string> = {
+                book: "📚 书籍",
+                album: "🎵 音乐",
+                movie: "🎬 电影",
+                series: "📺 剧集",
+            };
+            return labels[type] || type;
+        }
+
+        // Get optimized cover URL from global cover map
+        function getCoverUrl(coverPath: string | undefined): string {
+            if (!coverPath) return "";
+            const coverMap = (window as any).__OPTIMIZED_COVERS__ || {};
+            const coverInfo = coverMap[coverPath];
+            return coverInfo?.src || coverPath;
+        }
+
+        function renderResults() {
+            if (!results) return;
+
+            if (currentResults.length === 0) {
+                results.innerHTML = `<div class="no-results">没有找到相关内容</div>`;
+                return;
+            }
+
+            const html = currentResults
+                .map(
+                    (item: any, index: number) => `
+        <div class="search-result ${index === selectedIndex ? "selected" : ""}" 
+             data-index="${index}"
+             data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+          <img 
+            class="result-cover ${item.type === "album" ? "album" : ""}" 
+            src="${getCoverUrl(item.cover)}" 
+            alt=""
+            loading="lazy"
+          />
+          <div class="result-info">
+            <div class="result-title">${item.title}</div>
+            <div class="result-meta">
+              <span class="result-type">${getTypeLabel(item.type)}</span>
+              ${item.creator ? `<span>${item.creator}</span>` : ""}
+              ${item.year ? `<span>·</span><span>${item.year}</span>` : ""}
+              ${item.rating ? `<span class="result-rating">${item.rating}/10</span>` : ""}
+            </div>
+          </div>
+        </div>
+      `,
+                )
+                .join("");
+
+            results.innerHTML =
+                html +
+                `
+        <div class="keyboard-nav-hint">
+          <span class="nav-hint-item"><kbd>↑↓</kbd> 导航</span>
+          <span class="nav-hint-item"><kbd>Enter</kbd> 查看详情</span>
+          <span class="nav-hint-item"><kbd>ESC</kbd> 关闭</span>
+        </div>
+      `;
+
+            // Add click handlers
+            results.querySelectorAll(".search-result").forEach((el) => {
+                el.addEventListener("click", () => {
+                    const itemData = el.getAttribute("data-item");
+                    if (itemData) {
+                        openDetail(JSON.parse(itemData.replace(/&#39;/g, "'")));
+                    }
+                });
+            });
+        }
+
+        function openDetail(item: any) {
+            closeSearch();
+
+            // Trigger detail modal with the item data
+            // Convert to the format expected by DetailModal
+            const detailData: Record<string, string> = {
+                title: item.title || "",
+                cover: item.cover || "",
+                rating: item.rating?.toString() || "",
+                year: item.year?.toString() || "",
+                country: item.country || "",
+                notes: item.notes || "",
+                status: item.status || "",
+                addedDate: item.addedDate || "",
+            };
+
+            // Type-specific fields
+            if (item.type === "book") {
+                detailData.author = item.creator || "";
+                detailData.publisher = item.publisher || "";
+                detailData.platform = item.platform || "";
+            } else if (item.type === "album") {
+                detailData.artist = item.creator || "";
+                detailData.genre = item.genre || "";
+            } else {
+                detailData.director = item.creator || "";
+                detailData.genre = item.genre || "";
+                detailData.type = item.type;
+            }
+
+            // Dispatch event to open modal
+            window.dispatchEvent(
+                new CustomEvent("open-detail-modal", { detail: detailData }),
+            );
+        }
+
+        function openSearch() {
+            if (overlay) {
+                overlay.classList.add("active");
+                document.body.classList.add("modal-open");
+                input?.focus();
+            }
+        }
+
+        function closeSearch() {
+            if (overlay) {
+                overlay.classList.remove("active");
+                document.body.classList.remove("modal-open");
+                if (input) input.value = "";
+                showHint();
+            }
+        }
+
+        // Keyboard shortcut: Cmd+K or Ctrl+K
+        document.addEventListener("keydown", (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+                e.preventDefault();
+                if (overlay?.classList.contains("active")) {
+                    closeSearch();
+                } else {
+                    openSearch();
+                }
+            }
+
+            // Only handle these keys when search is open
+            if (!overlay?.classList.contains("active")) return;
+
+            if (e.key === "Escape") {
+                e.preventDefault();
+                closeSearch();
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (currentResults.length > 0) {
+                    selectedIndex = (selectedIndex + 1) % currentResults.length;
+                    updateSelection();
+                    scrollToSelected();
+                }
+            }
+
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (currentResults.length > 0) {
+                    selectedIndex =
+                        selectedIndex <= 0
+                            ? currentResults.length - 1
+                            : selectedIndex - 1;
+                    updateSelection();
+                    scrollToSelected();
+                }
+            }
+
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (selectedIndex >= 0 && currentResults[selectedIndex]) {
+                    openDetail(currentResults[selectedIndex]);
+                }
+            }
+        });
+
+        // Only update selected class without re-rendering
+        function updateSelection() {
+            if (!results) return;
+            const items = results.querySelectorAll(".search-result");
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add("selected");
+                } else {
+                    item.classList.remove("selected");
+                }
+            });
+        }
+
+        function scrollToSelected() {
+            const selected = results?.querySelector(".search-result.selected");
+            if (selected) {
+                selected.scrollIntoView({
+                    block: "nearest",
+                    behavior: "smooth",
+                });
+            }
+        }
+
+        // Input handler
+        input?.addEventListener("input", (e) => {
+            const query = (e.target as HTMLInputElement).value;
+            search(query);
+        });
+
+        // Click backdrop to close
+        overlay
+            ?.querySelector(".search-backdrop")
+            ?.addEventListener("click", closeSearch);
+
+        // Expose global function for external trigger
+        (window as any).openGlobalSearch = openSearch;
+    });
+</script>

@@ -1,0 +1,307 @@
+---
+import Layout from "../layouts/Layout.astro";
+import RecordCabinet from "../components/RecordCabinet.astro";
+import NavMenu from "../components/NavMenu.astro";
+import FilterToggle from "../components/FilterToggle.astro";
+import SortToggle from "../components/SortToggle.astro";
+import SearchButton from "../components/SearchButton.astro";
+import musicData from "../data/music.json";
+
+// Type assertion
+const albums = musicData
+  .map((item) => ({
+    ...item,
+  }))
+  .sort(
+    (a, b) =>
+      new Date(b.addedDate || 0).getTime() -
+      new Date(a.addedDate || 0).getTime(),
+  );
+
+// Helper function to split slash-separated values
+function splitBySlash(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(/\s*\/\s*/)
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+// Extract filter options (split slash-separated values into individual options)
+const artists = [
+  ...new Set(albums.flatMap((b) => splitBySlash(b.artist))),
+].sort();
+const years = [...new Set(albums.map((b) => b.year).filter(Boolean))].sort(
+  (a, b) => b - a,
+);
+const countries = [
+  ...new Set(albums.flatMap((b) => splitBySlash(b.country))),
+].sort();
+---
+
+<Layout
+  title="Concert Hall | Lin0u0"
+  description="Music Collection"
+  totalCount={albums.length}
+>
+  <div class="page-container">
+    <header class="page-header">
+      <h1 class="page-title">Concert Hall</h1>
+      <NavMenu currentPage="concert-hall" />
+    </header>
+
+    <div class="filters-section">
+      <div class="filters-toolbar">
+        <FilterToggle />
+        <div class="toolbar-right">
+          <SearchButton />
+          <SortToggle showRating={false} />
+        </div>
+      </div>
+
+      <div class="collapsible-filters" data-expanded="false">
+        <div class="collapsible-inner">
+          <div class="filter-group">
+            <span class="filter-label">Added</span>
+            <div class="filter-options">
+              <button
+                class="filter-chip active"
+                data-filter-type="added"
+                data-value="all">All</button
+              >
+              {
+                [
+                  ...new Set(
+                    albums.map((b) => (b.addedDate || "").substring(0, 4)),
+                  ),
+                ]
+                  .filter((y) => y)
+                  .sort((a, b) => Number(b) - Number(a))
+                  .map((year) => (
+                    <button
+                      class="filter-chip"
+                      data-filter-type="added"
+                      data-value={year}
+                    >
+                      {year}
+                    </button>
+                  ))
+              }
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-label">Released</span>
+            <div class="filter-options">
+              <button
+                class="filter-chip active"
+                data-filter-type="year"
+                data-value="all">All</button
+              >
+              {
+                years.map((year) => (
+                  <button
+                    class="filter-chip"
+                    data-filter-type="year"
+                    data-value={year}
+                  >
+                    {year}
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-label">Artist</span>
+            <div class="filter-options">
+              <button
+                class="filter-chip active"
+                data-filter-type="artist"
+                data-value="all">All</button
+              >
+              {
+                artists.map((artist) => (
+                  <button
+                    class="filter-chip"
+                    data-filter-type="artist"
+                    data-value={artist}
+                  >
+                    {artist}
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-label">Country</span>
+            <div class="filter-options">
+              <button
+                class="filter-chip active"
+                data-filter-type="country"
+                data-value="all">All</button
+              >
+              {
+                countries.map((country) => (
+                  <button
+                    class="filter-chip"
+                    data-filter-type="country"
+                    data-value={country}
+                  >
+                    {country}
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="music-grid">
+      <RecordCabinet albums={albums} variant="grid" />
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const filters: Record<string, string> = {
+    artist: "all",
+    year: "all",
+    added: "all",
+    country: "all",
+  };
+
+  let currentSort = "added-desc"; // Default sort
+
+  const chips = document.querySelectorAll(".filter-chip");
+  const items = document.querySelectorAll(".vinyl-sleeve");
+  const itemsContainer = document.querySelector(".records-container");
+  const statsDisplay = document.getElementById("stats-display");
+  const totalCount = items.length;
+
+  function updateStats() {
+    if (!statsDisplay) return;
+    const visibleCount = Array.from(items).filter(
+      (item) => (item as HTMLElement).style.display !== "none",
+    ).length;
+
+    if (visibleCount === totalCount) {
+      statsDisplay.textContent = `Total: ${totalCount}`;
+    } else {
+      statsDisplay.textContent = `Showing ${visibleCount} of ${totalCount}`;
+    }
+  }
+
+  function filterItems() {
+    items.forEach((item) => {
+      const itemEl = item as HTMLElement;
+      const itemArtist = itemEl.dataset.artist || "";
+      const itemYear = itemEl.dataset.year || "";
+      const itemAddedDate = itemEl.dataset.addedDate || "";
+      const itemAddedYear = itemAddedDate.substring(0, 4);
+      const itemCountry = itemEl.dataset.country || "";
+
+      const matchArtist =
+        filters.artist === "all" || itemArtist.includes(filters.artist);
+      const matchYear = filters.year === "all" || filters.year === itemYear;
+      const matchAdded =
+        filters.added === "all" || filters.added === itemAddedYear;
+      const matchCountry =
+        filters.country === "all" || itemCountry.includes(filters.country);
+
+      if (matchArtist && matchYear && matchAdded && matchCountry) {
+        itemEl.style.display = "";
+      } else {
+        itemEl.style.display = "none";
+      }
+    });
+
+    updateStats();
+  }
+
+  function sortItems() {
+    if (!itemsContainer) return;
+
+    const itemsArray = Array.from(items) as HTMLElement[];
+
+    itemsArray.sort((a, b) => {
+      const [field, direction] = currentSort.split("-");
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+
+      switch (field) {
+        case "added":
+          aVal = a.dataset.addedDate || "1970-01-01";
+          bVal = b.dataset.addedDate || "1970-01-01";
+          break;
+        case "year":
+          aVal = parseInt(a.dataset.year || "0");
+          bVal = parseInt(b.dataset.year || "0");
+          break;
+        case "title":
+          aVal = a.dataset.title?.toLowerCase() || "";
+          bVal = b.dataset.title?.toLowerCase() || "";
+          break;
+      }
+
+      let result = 0;
+      if (typeof aVal === "string") {
+        result = aVal.localeCompare(bVal as string);
+      } else {
+        result = (aVal as number) - (bVal as number);
+      }
+
+      return direction === "desc" ? -result : result;
+    });
+
+    // Re-append in sorted order
+    itemsArray.forEach((item) => itemsContainer.appendChild(item));
+  }
+
+  // Filter chip click handler
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const el = chip as HTMLElement;
+      const type = el.dataset.filterType!;
+      const value = el.dataset.value!;
+
+      document
+        .querySelectorAll(`.filter-chip[data-filter-type="${type}"]`)
+        .forEach((c) => c.classList.remove("active"));
+      el.classList.add("active");
+
+      filters[type] = value;
+      filterItems();
+    });
+  });
+
+  // Sort handler
+  window.addEventListener("sort-change", ((e: CustomEvent) => {
+    currentSort = e.detail.sort;
+    sortItems();
+  }) as EventListener);
+</script>
+
+<style>
+  .filters-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    .filters-toolbar {
+      gap: var(--space-sm);
+    }
+  }
+</style>

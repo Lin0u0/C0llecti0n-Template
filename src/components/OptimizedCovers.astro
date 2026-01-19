@@ -1,0 +1,69 @@
+---
+/**
+ * This component generates optimized modal-size images at build time
+ * and creates a JS map for runtime lookup with dimensions
+ */
+import { getImage } from "astro:assets";
+import { getCoverImage } from "../utils/images";
+
+import booksData from "../data/books.json";
+import musicData from "../data/music.json";
+import moviesData from "../data/movies.json";
+import seriesData from "../data/series.json";
+
+interface Props {
+    width?: number;
+}
+
+const { width = 360 } = Astro.props;
+
+// Collect all cover paths
+const allCoverPaths = [
+    ...booksData.map((b) => b.cover),
+    ...musicData.map((m) => m.cover),
+    ...moviesData.map((m) => m.cover),
+    ...seriesData.map((s) => s.cover),
+].filter(Boolean) as string[];
+
+// Generate optimized images and create mapping with dimensions
+interface CoverInfo {
+    src: string;
+    width: number;
+    height: number;
+}
+const coverMap: Record<string, CoverInfo> = {};
+
+for (const coverPath of allCoverPaths) {
+    const imageData = getCoverImage(coverPath);
+    if (imageData) {
+        try {
+            const optimized = await getImage({
+                src: imageData,
+                width: width,
+                format: "webp",
+            });
+            // Calculate height based on original aspect ratio
+            const aspectRatio = imageData.height / imageData.width;
+            const calculatedHeight = Math.round(width * aspectRatio);
+
+            coverMap[coverPath] = {
+                src: optimized.src,
+                width: width,
+                height: calculatedHeight,
+            };
+        } catch (e) {
+            // Fallback to original if optimization fails
+            coverMap[coverPath] = {
+                src: imageData.src,
+                width: imageData.width,
+                height: imageData.height,
+            };
+        }
+    }
+}
+---
+
+<script is:inline define:vars={{ coverMap }}>
+    // Make cover map available globally for modal use
+    window.__OPTIMIZED_COVERS__ = coverMap;
+</script>

@@ -1,0 +1,130 @@
+---
+/**
+ * StatusFilter - Quick filter for item status
+ * Shows: All, In Progress (reading/watching), Completed
+ */
+
+interface Props {
+    type?: "book" | "media"; // book uses reading/completed, media uses watching/completed
+}
+
+const { type = "book" } = Astro.props;
+
+const inProgressLabel = type === "book" ? "阅读中" : "观看中";
+const inProgressValue = type === "book" ? "reading" : "watching";
+---
+
+<div class="status-filter">
+    <button class="status-chip active" data-status="all">全部</button>
+    <button class="status-chip" data-status={inProgressValue}
+        >{inProgressLabel}</button
+    >
+    <button class="status-chip" data-status="completed">已完成</button>
+</div>
+
+<style>
+    .status-filter {
+        display: flex;
+        gap: var(--space-xs);
+        flex-wrap: wrap;
+    }
+
+    .status-chip {
+        padding: 4px 12px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        font-family: var(--font-body);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        /* Raised button style */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        border-top-color: rgba(255, 255, 255, 0.06);
+        border-bottom-color: rgba(0, 0, 0, 0.25);
+    }
+
+    .status-chip:hover {
+        background: var(--bg-shelf);
+        color: var(--text-primary);
+    }
+
+    .status-chip.active {
+        background: var(--bg-shelf);
+        color: var(--text-primary);
+        border-color: var(--border-focus);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    /* In Progress (reading/watching) - subtle blue highlight */
+    .status-chip[data-status="reading"].active,
+    .status-chip[data-status="watching"].active {
+        background: rgba(107, 140, 174, 0.2);
+        border-color: rgba(107, 140, 174, 0.4);
+        color: #6b8cae;
+    }
+
+    /* Completed - subtle green highlight */
+    .status-chip[data-status="completed"].active {
+        background: rgba(46, 90, 53, 0.2);
+        border-color: rgba(46, 90, 53, 0.4);
+        color: var(--velvet-green);
+    }
+
+    /* Light mode */
+    :global([data-theme="light"]) .status-chip {
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.1),
+            0 1px 2px rgba(0, 0, 0, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.85),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+        border-top-color: rgba(255, 255, 255, 0.4);
+        border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+
+    :global([data-theme="light"]) .status-chip.active {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    :global([data-theme="light"]) .status-chip[data-status="reading"].active,
+    :global([data-theme="light"]) .status-chip[data-status="watching"].active {
+        background: rgba(107, 140, 174, 0.15);
+        color: #5a7a9a;
+    }
+
+    :global([data-theme="light"]) .status-chip[data-status="completed"].active {
+        background: rgba(67, 112, 75, 0.15);
+        color: var(--velvet-green);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const chips = document.querySelectorAll(".status-filter .status-chip");
+
+        chips.forEach((chip) => {
+            chip.addEventListener("click", () => {
+                const status = (chip as HTMLElement).dataset.status;
+
+                // Update UI
+                chips.forEach((c) => c.classList.remove("active"));
+                chip.classList.add("active");
+
+                // Dispatch event
+                window.dispatchEvent(
+                    new CustomEvent("status-filter-change", {
+                        detail: { status },
+                    }),
+                );
+            });
+        });
+    });
+</script>

@@ -1,0 +1,131 @@
+---
+interface Props {
+    stats?: {
+        books?: number;
+        albums?: number;
+        movies?: number;
+        series?: number;
+    };
+    totalCount?: number;
+    isHome?: boolean;
+}
+
+const { stats, totalCount, isHome = false } = Astro.props;
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+    <div class="footer-content">
+        {
+            isHome && stats ? (
+                <div class="stats-grid">
+                    <span class="stat-item">
+                        <span class="stat-count">{stats.books || 0}</span> Books
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item">
+                        <span class="stat-count">{stats.albums || 0}</span>{" "}
+                        Albums
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item">
+                        <span class="stat-count">{stats.movies || 0}</span>{" "}
+                        Movies
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item">
+                        <span class="stat-count">{stats.series || 0}</span>{" "}
+                        Series
+                    </span>
+                    <p class="stats-label">{currentYear} Collections</p>
+                </div>
+            ) : (
+                <div class="collection-stats">
+                    <span id="stats-display">
+                        {totalCount !== undefined ? `Total: ${totalCount}` : ""}
+                    </span>
+                </div>
+            )
+        }
+        <div class="footnote">
+            <p>&copy; {currentYear} Lin0u0. All rights reserved.</p>
+            <p>
+                Originally Designed by <a
+                    href="https://isdou.info/"
+                    target="_blank">DOU.OS</a
+                >
+            </p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .site-footer {
+        margin-top: var(--space-xl);
+        padding: var(--space-lg) var(--space-md);
+        /* Embossed divider effect */
+        border-top: 1px solid var(--border-subtle);
+        box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .footer-content {
+        max-width: 800px;
+        width: 100%;
+    }
+
+    .stats-grid {
+        margin-bottom: var(--space-sm);
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+    }
+
+    .stat-count {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .stat-separator {
+        margin: 0 var(--space-sm);
+        color: var(--text-muted);
+    }
+
+    .stats-label {
+        margin-top: var(--space-xs);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .collection-stats {
+        margin-bottom: var(--space-sm);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .footnote {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .footnote p {
+        margin: 2px 0;
+    }
+
+    .footnote a {
+        color: var(--text-muted);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        transition: color var(--transition-fast);
+    }
+
+    .footnote a:hover {
+        color: var(--text-secondary);
+    }
+</style>

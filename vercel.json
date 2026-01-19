@@ -1,0 +1,15 @@
+{
+    "buildCommand": "npm run build:prod",
+    "outputDirectory": "dist",
+    "framework": "astro",
+    "rewrites": [
+        {
+            "source": "/admin",
+            "destination": "/404"
+        },
+        {
+            "source": "/admin/(.*)",
+            "destination": "/404"
+        }
+    ]
+}

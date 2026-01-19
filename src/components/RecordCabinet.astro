@@ -1,0 +1,69 @@
+---
+import VinylRecord from "./VinylRecord.astro";
+
+interface Album {
+  id: string;
+  title: string;
+  artist: string;
+  cover: string;
+  rating?: number;
+  genre?: string;
+  year?: number;
+  addedDate?: string;
+  country?: string;
+  notes?: string;
+}
+
+interface Props {
+  albums: Album[];
+  variant?: "scroll" | "grid";
+}
+
+const { albums, variant = "scroll" } = Astro.props;
+---
+
+<section class="record-cabinet-section">
+  <div
+    class={`records-container ${variant === "scroll" ? "horizontal-scroll stagger-children" : "grid-layout"}`}
+  >
+    {albums.map((album) => <VinylRecord {...album} />)}
+  </div>
+</section>
+
+<style>
+  .record-cabinet-section {
+    margin-bottom: var(--space-xl);
+    overflow: visible;
+  }
+
+  .records-container {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-xl);
+    padding: 0;
+    padding-bottom: var(--space-md); /* Space for shadows */
+    min-height: 220px;
+    overflow: visible;
+  }
+
+  .grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--vinyl-size));
+    justify-content: center;
+    padding-bottom: var(--space-lg);
+    row-gap: var(--space-xl);
+    column-gap: var(--space-xl);
+  }
+
+  /* Scroll fade */
+  .horizontal-scroll::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    flex-shrink: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--bg-room));
+    pointer-events: none;
+  }
+</style>

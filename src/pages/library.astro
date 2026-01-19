@@ -1,0 +1,337 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Bookshelf from "../components/Bookshelf.astro";
+import NavMenu from "../components/NavMenu.astro";
+import FilterToggle from "../components/FilterToggle.astro";
+import SortToggle from "../components/SortToggle.astro";
+import StatusFilter from "../components/StatusFilter.astro";
+import SearchButton from "../components/SearchButton.astro";
+import booksData from "../data/books.json";
+
+const books = booksData
+    .map((b) => ({
+        ...b,
+        status: b.status as "reading" | "completed" | "want-to-read",
+    }))
+    .sort(
+        (a, b) =>
+            new Date(b.addedDate || 0).getTime() -
+            new Date(a.addedDate || 0).getTime(),
+    );
+
+// Helper function to split slash-separated values
+function splitBySlash(value: string | undefined): string[] {
+    if (!value) return [];
+    return value
+        .split(/\s*\/\s*/)
+        .map((v) => v.trim())
+        .filter(Boolean);
+}
+
+// Extract filter options (split slash-separated values into individual options)
+const authors = [
+    ...new Set(books.flatMap((b) => splitBySlash(b.author))),
+].sort();
+const years = [...new Set(books.map((b) => b.year).filter(Boolean))].sort(
+    (a, b) => b - a,
+);
+const countries = [
+    ...new Set(books.flatMap((b) => splitBySlash(b.country))),
+].sort();
+---
+
+<Layout
+    title="Library | Lin0u0"
+    description="Book Collection"
+    totalCount={books.length}
+>
+    <div class="page-container">
+        <header class="page-header">
+            <h1 class="page-title">Library</h1>
+            <NavMenu currentPage="library" />
+        </header>
+
+        <div class="filters-section">
+            <div class="filters-toolbar">
+                <FilterToggle />
+                <div class="toolbar-right">
+                    <SearchButton />
+                    <SortToggle showRating={true} />
+                </div>
+            </div>
+
+            <div class="collapsible-filters" data-expanded="false">
+                <div class="collapsible-inner">
+                    <div class="filter-group">
+                        <span class="filter-label">Status</span>
+                        <StatusFilter type="book" />
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Added</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="added"
+                                data-value="all">All</button
+                            >
+                            {
+                                [
+                                    ...new Set(
+                                        books.map((b) =>
+                                            (b.addedDate || "").substring(0, 4),
+                                        ),
+                                    ),
+                                ]
+                                    .filter((y) => y)
+                                    .sort((a, b) => Number(b) - Number(a))
+                                    .map((year) => (
+                                        <button
+                                            class="filter-chip"
+                                            data-filter-type="added"
+                                            data-value={year}
+                                        >
+                                            {year}
+                                        </button>
+                                    ))
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Published</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="year"
+                                data-value="all">All</button
+                            >
+                            {
+                                years.map((year) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="year"
+                                        data-value={year}
+                                    >
+                                        {year}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Author</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="author"
+                                data-value="all">All</button
+                            >
+                            {
+                                authors.map((author) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="author"
+                                        data-value={author}
+                                    >
+                                        {author}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">Country</span>
+                        <div class="filter-options">
+                            <button
+                                class="filter-chip active"
+                                data-filter-type="country"
+                                data-value="all">All</button
+                            >
+                            {
+                                countries.map((country) => (
+                                    <button
+                                        class="filter-chip"
+                                        data-filter-type="country"
+                                        data-value={country}
+                                    >
+                                        {country}
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="books-grid">
+            <Bookshelf books={books} variant="grid" />
+        </div>
+    </div>
+</Layout>
+
+<script>
+    const filters: Record<string, string> = {
+        year: "all",
+        author: "all",
+        added: "all",
+        country: "all",
+        status: "all", // New: status filter
+    };
+
+    let currentSort = "added-desc"; // Default sort
+
+    const chips = document.querySelectorAll(".filter-chip");
+    const items = document.querySelectorAll(".book-spine");
+    const itemsContainer = document.querySelector(".books-container");
+    const statsDisplay = document.getElementById("stats-display");
+    const totalCount = items.length;
+
+    function updateStats() {
+        if (!statsDisplay) return;
+        const visibleCount = Array.from(items).filter(
+            (item) => (item as HTMLElement).style.display !== "none",
+        ).length;
+
+        if (visibleCount === totalCount) {
+            statsDisplay.textContent = `Total: ${totalCount}`;
+        } else {
+            statsDisplay.textContent = `Showing ${visibleCount} of ${totalCount}`;
+        }
+    }
+
+    function filterItems() {
+        items.forEach((item) => {
+            const itemEl = item as HTMLElement;
+            const itemYear = itemEl.dataset.year || "";
+            const itemAuthor = itemEl.dataset.author || "";
+            const itemAddedDate = itemEl.dataset.addedDate || "";
+            const itemAddedYear = itemAddedDate.substring(0, 4);
+            const itemCountry = itemEl.dataset.country || "";
+            const itemStatus = itemEl.dataset.status || "";
+
+            const matchYear =
+                filters.year === "all" || filters.year === itemYear;
+            const matchAuthor =
+                filters.author === "all" || itemAuthor.includes(filters.author);
+            const matchAdded =
+                filters.added === "all" || filters.added === itemAddedYear;
+            const matchCountry =
+                filters.country === "all" ||
+                itemCountry.includes(filters.country);
+            const matchStatus =
+                filters.status === "all" || filters.status === itemStatus;
+
+            if (
+                matchYear &&
+                matchAuthor &&
+                matchAdded &&
+                matchCountry &&
+                matchStatus
+            ) {
+                itemEl.style.display = "";
+            } else {
+                itemEl.style.display = "none";
+            }
+        });
+
+        updateStats();
+    }
+
+    function sortItems() {
+        if (!itemsContainer) return;
+
+        const itemsArray = Array.from(items) as HTMLElement[];
+
+        itemsArray.sort((a, b) => {
+            const [field, direction] = currentSort.split("-");
+            let aVal: string | number = "";
+            let bVal: string | number = "";
+
+            switch (field) {
+                case "added":
+                    aVal = a.dataset.addedDate || "1970-01-01";
+                    bVal = b.dataset.addedDate || "1970-01-01";
+                    break;
+                case "rating":
+                    aVal = parseFloat(a.dataset.rating || "0");
+                    bVal = parseFloat(b.dataset.rating || "0");
+                    break;
+                case "year":
+                    aVal = parseInt(a.dataset.year || "0");
+                    bVal = parseInt(b.dataset.year || "0");
+                    break;
+                case "title":
+                    aVal = a.dataset.title?.toLowerCase() || "";
+                    bVal = b.dataset.title?.toLowerCase() || "";
+                    break;
+            }
+
+            let result = 0;
+            if (typeof aVal === "string") {
+                result = aVal.localeCompare(bVal as string);
+            } else {
+                result = (aVal as number) - (bVal as number);
+            }
+
+            return direction === "desc" ? -result : result;
+        });
+
+        // Re-append in sorted order
+        itemsArray.forEach((item) => itemsContainer.appendChild(item));
+    }
+
+    // Filter chip click handler
+    chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+            const el = chip as HTMLElement;
+            const type = el.dataset.filterType!;
+            const value = el.dataset.value!;
+
+            document
+                .querySelectorAll(`.filter-chip[data-filter-type="${type}"]`)
+                .forEach((c) => c.classList.remove("active"));
+            el.classList.add("active");
+
+            filters[type] = value;
+            filterItems();
+        });
+    });
+
+    // Status filter handler
+    window.addEventListener("status-filter-change", ((e: CustomEvent) => {
+        filters.status = e.detail.status;
+        filterItems();
+    }) as EventListener);
+
+    // Sort handler
+    window.addEventListener("sort-change", ((e: CustomEvent) => {
+        currentSort = e.detail.sort;
+        sortItems();
+    }) as EventListener);
+</script>
+
+<style>
+    .filters-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-md);
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+        .filters-toolbar {
+            gap: var(--space-sm);
+        }
+    }
+</style>

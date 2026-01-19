@@ -1,0 +1,302 @@
+---
+import { Image } from "astro:assets";
+import { getCoverImage } from "../utils/images";
+
+interface Props {
+  title: string;
+  artist: string;
+  cover: string;
+  rating?: number;
+  genre?: string;
+  id: string;
+  year?: number;
+  addedDate?: string;
+  country?: string;
+  notes?: string;
+}
+
+const {
+  title,
+  artist,
+  cover,
+  rating,
+  genre,
+  id,
+  year,
+  addedDate,
+  country,
+  notes,
+} = Astro.props;
+
+const coverImage = getCoverImage(cover);
+---
+
+<button
+  class="vinyl-sleeve focus-ring"
+  data-album-id={id}
+  data-title={title}
+  data-artist={artist}
+  data-cover={cover}
+  data-rating={rating}
+  data-genre={genre}
+  data-year={year}
+  data-added-date={addedDate}
+  data-country={country}
+  data-notes={notes}
+  aria-label={`${title} by ${artist}`}
+>
+  <!-- Vinyl disc peeking out from behind -->
+  <div class="vinyl-disc">
+    <div class="vinyl-hole"></div>
+  </div>
+
+  <!-- Album cover sleeve -->
+  <div class="sleeve-front">
+    <div class="cover-skeleton"></div>
+    {
+      coverImage ? (
+        <Image
+          src={coverImage}
+          alt={title}
+          class="cover-image"
+          width={320}
+          loading="lazy"
+        />
+      ) : cover ? (
+        <img src={cover} alt={title} class="cover-image" loading="lazy" />
+      ) : (
+        <div class="cover-placeholder">
+          <span class="placeholder-title">{title}</span>
+          <span class="placeholder-artist">{artist}</span>
+        </div>
+      )
+    }
+  </div>
+</button>
+
+<script>
+  // Handle image load for reveal animation - works with lazy loading
+  function handleImageLoad(img: HTMLImageElement) {
+    const skeleton = img.parentElement?.querySelector(".cover-skeleton");
+    img.classList.add("loaded");
+    skeleton?.classList.add("loaded");
+  }
+
+  // Set up load handlers for all vinyl sleeve images
+  function initVinylImages() {
+    document.querySelectorAll(".vinyl-sleeve .cover-image").forEach((img) => {
+      const imgEl = img as HTMLImageElement;
+
+      // If already loaded (cached), show immediately
+      if (imgEl.complete && imgEl.naturalHeight !== 0) {
+        handleImageLoad(imgEl);
+      } else {
+        // Wait for load event
+        imgEl.addEventListener("load", () => handleImageLoad(imgEl), {
+          once: true,
+        });
+      }
+    });
+  }
+
+  // Run on DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initVinylImages);
+  } else {
+    initVinylImages();
+  }
+</script>
+
+<style>
+  .vinyl-sleeve {
+    position: relative;
+    width: var(--vinyl-size, 160px);
+    height: var(--vinyl-size, 160px);
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform var(--transition-normal);
+  }
+
+  .vinyl-sleeve:hover {
+    transform: translateY(-8px);
+  }
+
+  /* Override animations.css global hover style */
+  .vinyl-sleeve.vinyl-sleeve:hover {
+    transform: translateY(-8px);
+  }
+
+  /* Vinyl disc behind the sleeve - peeking out */
+  .vinyl-disc {
+    position: absolute;
+    top: 0%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    background:
+      /* Center label area */
+      radial-gradient(
+        circle at center,
+        transparent 18%,
+        var(--vinyl-color) 18.5%
+      ),
+      /* Grooves with more depth */
+      repeating-radial-gradient(
+          circle at center,
+          var(--vinyl-color) 0px,
+          var(--vinyl-color) 1px,
+          rgba(255, 255, 255, 0.03) 1px,
+          rgba(255, 255, 255, 0.03) 2px
+        ),
+      /* Base */ var(--vinyl-color);
+    z-index: 0;
+    transition: transform var(--transition-slow);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.5),
+      inset 0 0 20px rgba(0, 0, 0, 0.3),
+      inset 0 0 2px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  /* Override animations.css global styles */
+  .vinyl-sleeve .vinyl-disc {
+    top: 0%;
+    z-index: 0;
+  }
+
+  /* Vinyl light reflection */
+  .vinyl-disc::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        ellipse 60% 30% at 30% 30%,
+        rgba(255, 255, 255, 0.15) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at center,
+        transparent 48%,
+        rgba(60, 60, 60, 0.3) 49%,
+        rgba(20, 20, 20, 0.5) 50%
+      );
+    pointer-events: none;
+  }
+
+  /* Hover effect - disc slides out and rotates */
+  .vinyl-sleeve:hover .vinyl-disc {
+    transform: translateX(-50%) translateY(-30px) rotate(50deg);
+  }
+
+  /* Center label */
+  .vinyl-hole {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8%;
+    height: 8%;
+    background: var(--bg-room);
+    border-radius: 50%;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  }
+
+  /* Album sleeve front */
+  .sleeve-front {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    z-index: 1;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* Skeleton loading */
+  .cover-skeleton {
+    position: absolute;
+    inset: 0;
+    /* Solid black base to hide the vinyl disc behind */
+    background-color: #1a1a1a;
+    background-image: linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+    z-index: 2;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .cover-skeleton.loaded {
+    opacity: 0;
+    pointer-events: none;
+    /* Delay fadeout so image has time to appear first */
+    transition-delay: 0.15s;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
+
+  .cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .cover-image.loaded {
+    opacity: 1;
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    background: var(--bg-shelf);
+    border: 1px dashed var(--border-subtle);
+    text-align: center;
+  }
+
+  .placeholder-title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xs);
+    line-height: 1.2;
+    opacity: 0.8;
+  }
+
+  .placeholder-artist {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+</style>
