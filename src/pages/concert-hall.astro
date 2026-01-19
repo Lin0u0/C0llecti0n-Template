@@ -299,9 +299,26 @@ const countries = [
     flex-shrink: 0;
   }
 
+  /* 响应式封面大小调整 - 屏幕越小，封面越小 */
+  @media (max-width: 768px) {
+    :root {
+      --vinyl-size: 140px;
+    }
+  }
+
   @media (max-width: 480px) {
+    :root {
+      --vinyl-size: 120px;
+    }
+
     .filters-toolbar {
       gap: var(--space-sm);
+    }
+  }
+
+  @media (max-width: 360px) {
+    :root {
+      --vinyl-size: 100px;
     }
   }
 </style>

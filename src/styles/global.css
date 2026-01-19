@@ -248,6 +248,9 @@ body.modal-open {
   flex-direction: column;
   gap: var(--space-md);
   padding-bottom: var(--space-md);
+  position: relative;
+  z-index: 20;
+  /* Ensure filters (especially sort dropdown) stay on top of content-grid which may have z-index or transforms */
   /* Embossed divider effect removed per user request */
   /* border-bottom: 1px solid var(--border-subtle); */
   /* box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05); */
@@ -265,8 +268,8 @@ body.modal-open {
 }
 
 .collapsible-filters[data-expanded="true"] {
-  /* Large enough to contain all filters */
-  max-height: 600px;
+  /* Large enough to contain all filters - increased for pages with many filter groups */
+  max-height: 1000px;
 }
 
 .collapsible-inner {
@@ -399,9 +402,9 @@ body.modal-open {
   /* Embossed divider effect */
   border-bottom: 1px solid var(--border-subtle);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
-  /* Nav menu has its own z-index, keep header low */
+  /* Nav menu has its own z-index, keep header above filters */
   position: relative;
-  z-index: 10;
+  z-index: 30;
 }
 
 .page-title {

@@ -276,15 +276,14 @@ const { defaultSort = "added-desc", showRating = true } = Astro.props;
         margin: var(--space-xs) 0;
     }
 
-    /* Mobile: hide label text */
+    /* Mobile: hide label text and match SearchButton height */
     @media (max-width: 480px) {
         .sort-label {
             display: none;
         }
 
-        .sort-dropdown {
-            right: auto;
-            left: 0;
+        .sort-toggle {
+            padding: 6px 10px;
         }
     }
 </style>
