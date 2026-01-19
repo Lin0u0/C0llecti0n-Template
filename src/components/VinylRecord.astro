@@ -121,13 +121,15 @@ const coverImage = getCoverImage(cover);
     transition: transform var(--transition-normal);
   }
 
-  .vinyl-sleeve:hover {
-    transform: translateY(-8px);
-  }
+  @media (hover: hover) {
+    .vinyl-sleeve:hover {
+      transform: translateY(-8px);
+    }
 
-  /* Override animations.css global hover style */
-  .vinyl-sleeve.vinyl-sleeve:hover {
-    transform: translateY(-8px);
+    /* Override animations.css global hover style */
+    .vinyl-sleeve.vinyl-sleeve:hover {
+      transform: translateY(-8px);
+    }
   }
 
   /* Vinyl disc behind the sleeve - peeking out */
@@ -192,8 +194,10 @@ const coverImage = getCoverImage(cover);
   }
 
   /* Hover effect - disc slides out and rotates */
-  .vinyl-sleeve:hover .vinyl-disc {
-    transform: translateX(-50%) translateY(-30px) rotate(50deg);
+  @media (hover: hover) {
+    .vinyl-sleeve:hover .vinyl-disc {
+      transform: translateX(-50%) translateY(-30px) rotate(50deg);
+    }
   }
 
   /* Center label */

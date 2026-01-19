@@ -124,14 +124,16 @@ const spineClass = `spine-variant-${spineVariant}`;
     );
   }
 
-  .book-spine:hover {
-    transform: translateY(-8px);
-    /* Shadow change is instant - no transition for performance */
-    box-shadow:
-      4px 8px 12px rgba(0, 0, 0, 0.4),
-      2px 4px 6px rgba(0, 0, 0, 0.3),
-      inset 1px 0 0 rgba(255, 255, 255, 0.1),
-      inset -1px 0 0 rgba(0, 0, 0, 0.1);
+  @media (hover: hover) {
+    .book-spine:hover {
+      transform: translateY(-8px);
+      /* Shadow change is instant - no transition for performance */
+      box-shadow:
+        4px 8px 12px rgba(0, 0, 0, 0.4),
+        2px 4px 6px rgba(0, 0, 0, 0.3),
+        inset 1px 0 0 rgba(255, 255, 255, 0.1),
+        inset -1px 0 0 rgba(0, 0, 0, 0.1);
+    }
   }
 
   /* Right edge shadow - simulates thickness */

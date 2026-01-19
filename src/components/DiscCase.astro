@@ -130,8 +130,10 @@ const coverImage = getCoverImage(cover);
     transition: transform var(--transition-normal);
   }
 
-  .disc-case:hover {
-    transform: translateY(-4px) scale(1.02);
+  @media (hover: hover) {
+    .disc-case:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
   }
 
   /* Disc peeking from top - improved with rainbow effect */
@@ -170,8 +172,10 @@ const coverImage = getCoverImage(cover);
     pointer-events: none;
   }
 
-  .disc-case:hover .disc {
-    transform: translateX(-50%) translateY(-10px) rotate(8deg);
+  @media (hover: hover) {
+    .disc-case:hover .disc {
+      transform: translateX(-50%) translateY(-10px) rotate(8deg);
+    }
   }
 
   .disc-center {
@@ -326,8 +330,10 @@ const coverImage = getCoverImage(cover);
     );
   }
 
-  .disc-case:hover .watching-ribbon {
-    transform: translateY(-4px);
+  @media (hover: hover) {
+    .disc-case:hover .watching-ribbon {
+      transform: translateY(-4px);
+    }
   }
 
   /* Case spine */

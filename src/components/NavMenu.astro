@@ -156,9 +156,14 @@ const navItems = [
     white-space: nowrap;
   }
 
-  .nav-link:hover,
   .nav-link.active {
     color: var(--text-primary);
+  }
+
+  @media (hover: hover) {
+    .nav-link:hover {
+      color: var(--text-primary);
+    }
   }
 
   /* 移动端样式 */
@@ -222,9 +227,11 @@ const navItems = [
       transition: all var(--transition-fast);
     }
 
-    .nav-link:hover {
-      background: var(--bg-shelf);
-      color: var(--text-primary);
+    @media (hover: hover) {
+      .nav-link:hover {
+        background: var(--bg-shelf);
+        color: var(--text-primary);
+      }
     }
 
     .nav-link.active {

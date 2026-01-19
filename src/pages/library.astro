@@ -63,17 +63,17 @@ const countries = [
             <div class="collapsible-filters" data-expanded="false">
                 <div class="collapsible-inner">
                     <div class="filter-group">
-                        <span class="filter-label">Status</span>
+                        <span class="filter-label">状态</span>
                         <StatusFilter type="book" />
                     </div>
 
                     <div class="filter-group">
-                        <span class="filter-label">Added</span>
+                        <span class="filter-label">添加时间</span>
                         <div class="filter-options">
                             <button
                                 class="filter-chip active"
                                 data-filter-type="added"
-                                data-value="all">All</button
+                                data-value="all">全部</button
                             >
                             {
                                 [
@@ -99,12 +99,12 @@ const countries = [
                     </div>
 
                     <div class="filter-group">
-                        <span class="filter-label">Published</span>
+                        <span class="filter-label">出版年份</span>
                         <div class="filter-options">
                             <button
                                 class="filter-chip active"
                                 data-filter-type="year"
-                                data-value="all">All</button
+                                data-value="all">全部</button
                             >
                             {
                                 years.map((year) => (
@@ -121,12 +121,12 @@ const countries = [
                     </div>
 
                     <div class="filter-group">
-                        <span class="filter-label">Author</span>
+                        <span class="filter-label">作者</span>
                         <div class="filter-options">
                             <button
                                 class="filter-chip active"
                                 data-filter-type="author"
-                                data-value="all">All</button
+                                data-value="all">全部</button
                             >
                             {
                                 authors.map((author) => (
@@ -143,12 +143,12 @@ const countries = [
                     </div>
 
                     <div class="filter-group">
-                        <span class="filter-label">Country</span>
+                        <span class="filter-label">国家/地区</span>
                         <div class="filter-options">
                             <button
                                 class="filter-chip active"
                                 data-filter-type="country"
-                                data-value="all">All</button
+                                data-value="all">全部</button
                             >
                             {
                                 countries.map((country) => (
@@ -197,9 +197,9 @@ const countries = [
         ).length;
 
         if (visibleCount === totalCount) {
-            statsDisplay.textContent = `Total: ${totalCount}`;
+            statsDisplay.textContent = `共计: ${totalCount}`;
         } else {
-            statsDisplay.textContent = `Showing ${visibleCount} of ${totalCount}`;
+            statsDisplay.textContent = `显示 ${visibleCount} / ${totalCount}`;
         }
     }
 
