@@ -1,4 +1,4 @@
-# 📚 Shelf
+# 📚 C0llecti0n
 
 A beautiful, personal media collection tracker built with [Astro](https://astro.build).  
 Track your books, movies, TV series, and music albums in a stunning, interactive digital shelf.
