@@ -1,20 +1,6 @@
 ---
 import BookSpine from "./BookSpine.astro";
-
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  rating?: number;
-  status?: "reading" | "completed" | "want-to-read";
-  cover?: string;
-  year?: number;
-  addedDate?: string;
-  publisher?: string;
-  platform?: string;
-  country?: string;
-  notes?: string;
-}
+import type { Book } from "../types";
 
 interface Props {
   books: Book[];

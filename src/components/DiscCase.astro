@@ -1,20 +1,9 @@
 ---
 import { Image } from "astro:assets";
 import { getCoverImage } from "../utils/images";
+import type { Media } from "../types";
 
-interface Props {
-  title: string;
-  director?: string;
-  cover: string;
-  type: "movie" | "series";
-  rating?: number;
-  status?: "watching" | "completed" | "want-to-watch";
-  id: string;
-  year?: number;
-  addedDate?: string;
-  country?: string;
-  notes?: string;
-}
+interface Props extends Media {}
 
 const {
   title,

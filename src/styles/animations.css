@@ -42,44 +42,31 @@
     animation: fadeIn 0.4s ease-out forwards;
 }
 
-.stagger-children>*:nth-child(1) {
-    animation-delay: 0.05s;
-}
+/* Stagger delay using CSS custom properties for better scalability */
+.stagger-children>*:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children>*:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children>*:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children>*:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children>*:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children>*:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children>*:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children>*:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children>*:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children>*:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children>*:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children>*:nth-child(12) { animation-delay: 0.6s; }
+.stagger-children>*:nth-child(13) { animation-delay: 0.65s; }
+.stagger-children>*:nth-child(14) { animation-delay: 0.7s; }
+.stagger-children>*:nth-child(15) { animation-delay: 0.75s; }
+.stagger-children>*:nth-child(16) { animation-delay: 0.8s; }
+.stagger-children>*:nth-child(17) { animation-delay: 0.85s; }
+.stagger-children>*:nth-child(18) { animation-delay: 0.9s; }
+.stagger-children>*:nth-child(19) { animation-delay: 0.95s; }
+.stagger-children>*:nth-child(20) { animation-delay: 1s; }
 
-.stagger-children>*:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-.stagger-children>*:nth-child(3) {
-    animation-delay: 0.15s;
-}
-
-.stagger-children>*:nth-child(4) {
-    animation-delay: 0.2s;
-}
-
-.stagger-children>*:nth-child(5) {
-    animation-delay: 0.25s;
-}
-
-.stagger-children>*:nth-child(6) {
-    animation-delay: 0.3s;
-}
-
-.stagger-children>*:nth-child(7) {
-    animation-delay: 0.35s;
-}
-
-.stagger-children>*:nth-child(8) {
-    animation-delay: 0.4s;
-}
-
-.stagger-children>*:nth-child(9) {
-    animation-delay: 0.45s;
-}
-
-.stagger-children>*:nth-child(10) {
-    animation-delay: 0.5s;
+/* For items beyond 20, cap the delay at 1s to prevent too long wait times */
+.stagger-children>*:nth-child(n+21) {
+    animation-delay: 1.05s;
 }
 
 /* ==================== Modal Animations ==================== */

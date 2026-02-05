@@ -1,19 +1,6 @@
 ---
 import DiscCase from "./DiscCase.astro";
-
-interface Media {
-  id: string;
-  title: string;
-  director?: string;
-  cover: string;
-  type: "movie" | "series";
-  rating?: number;
-  status?: "watching" | "completed" | "want-to-watch";
-  year?: number;
-  addedDate?: string;
-  country?: string;
-  notes?: string;
-}
+import type { Media } from "../types";
 
 interface Props {
   movies?: Media[];

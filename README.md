@@ -10,6 +10,7 @@ Track your books, movies, TV series, and music albums in a stunning, interactive
 - **Theme Support**: Seamless **Light/Dark mode** switching.
 - **Interactive Shelf**: Visual "Book Spines" and "CD Drawers" that feel like a real collection.
 - **Smart Filters**: Filter your collection by Status (Reading/Watching), Country, Artist, Year, and more.
+- **Global Search**: Quick search with Cmd+K / Ctrl+K keyboard shortcut.
 - **Admin Panel**: A built-in management interface (`/admin`) to easily Add, Edit, and Delete items without touching code.
 - **Zero-Database**: All data is stored in simple, portable JSON files.
 
@@ -32,6 +33,19 @@ Track your books, movies, TV series, and music albums in a stunning, interactive
 ```bash
 npm install
 ```
+
+### Configuration
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+Available environment variables:
+- `ADMIN_KEY` - Access key for admin panel
+- `ADMIN_API_URL` - Admin API server URL (default: http://localhost:4322/api)
+- `ADMIN_API_PORT` - Admin API server port (default: 4322)
 
 ### Running Locally
 
@@ -60,6 +74,11 @@ npm run build
 
 The output will be in the `dist/` directory.
 
+To build without admin panel (for Vercel deployment):
+```bash
+npm run build:prod
+```
+
 ## 📂 Project Structure
 
 ```text
@@ -75,7 +94,10 @@ The output will be in the `dist/` directory.
 │   │   ├── library.astro
 │   │   ├── cinema.astro
 │   │   └── concert-hall.astro
-│   └── styles/       # Global styles & animations
+│   ├── scripts/      # Client-side JavaScript utilities
+│   ├── styles/       # Global styles & animations
+│   ├── types/        # TypeScript type definitions
+│   └── utils/        # Utility functions
 └── public/           # Static assets
 ```
 
@@ -88,3 +110,38 @@ Data is stored in `src/data/`:
 - `music.json`
 
 You can edit these directly or use the **Admin Panel** running locally.
+
+### Data Validation
+
+The admin server validates all incoming data:
+- Required fields check
+- Type validation (string, number, date, URL)
+- Range validation (e.g., rating 1-10, year 1000-2100)
+- Enum validation for status fields
+
+### Data Types
+
+See `src/types/index.ts` for all TypeScript interfaces:
+- `Book` - Books with author, publisher, platform
+- `Album` - Music with artist, genre
+- `Movie` / `Series` - Video media with director, genre
+
+## 🔧 Development
+
+### Code Organization
+
+- **Components**: Use shared types from `src/types/index.ts`
+- **Filters**: Filter/sort logic is in `src/utils/filters.ts` and `src/scripts/filter-system.ts`
+- **Pages**: Library, Cinema, and Concert Hall share the same filter system
+
+### Styling
+
+- CSS variables defined in `src/styles/global.css`
+- Animations in `src/styles/animations.css`
+- Component-specific styles use `<style>` tags
+
+## 📄 License
+
+© 2025 Lin0u0. All rights reserved.
+
+Originally Designed by [DOU.OS](https://isdou.info/)

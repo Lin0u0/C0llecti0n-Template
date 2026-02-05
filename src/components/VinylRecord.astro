@@ -1,19 +1,9 @@
 ---
 import { Image } from "astro:assets";
 import { getCoverImage } from "../utils/images";
+import type { Album } from "../types";
 
-interface Props {
-  title: string;
-  artist: string;
-  cover: string;
-  rating?: number;
-  genre?: string;
-  id: string;
-  year?: number;
-  addedDate?: string;
-  country?: string;
-  notes?: string;
-}
+interface Props extends Album {}
 
 const {
   title,

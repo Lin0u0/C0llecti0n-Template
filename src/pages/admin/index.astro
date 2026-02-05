@@ -18,8 +18,9 @@ const stats = {
 
 const totalCount = stats.books + stats.albums + stats.movies + stats.series;
 
-// 本地 API 服务器地址
-const API_BASE = "http://localhost:4322/api";
+// 本地 API 服务器地址 - 从环境变量获取，默认为 localhost
+const API_BASE = import.meta.env.ADMIN_API_URL || "http://localhost:4322/api";
+const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
 ---
 
 <Layout

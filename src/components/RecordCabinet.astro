@@ -1,18 +1,6 @@
 ---
 import VinylRecord from "./VinylRecord.astro";
-
-interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  cover: string;
-  rating?: number;
-  genre?: string;
-  year?: number;
-  addedDate?: string;
-  country?: string;
-  notes?: string;
-}
+import type { Album } from "../types";
 
 interface Props {
   albums: Album[];

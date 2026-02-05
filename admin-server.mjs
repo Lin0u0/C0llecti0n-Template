@@ -12,8 +12,11 @@ import { readFile, writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+// Configuration from environment variables
+const PORT = process.env.ADMIN_API_PORT || 4322;
+const HOST = process.env.ADMIN_API_HOST || 'localhost';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = 4322;
 
 // 数据文件路径
 const DATA_DIR = join(__dirname, 'src', 'data');
@@ -23,6 +26,179 @@ const DATA_FILES = {
     series: join(DATA_DIR, 'series.json'),
     music: join(DATA_DIR, 'music.json'),
 };
+
+// ==================== Data Validation Schemas ====================
+
+const ValidationRules = {
+    required: (value, fieldName) => {
+        if (value === undefined || value === null || value === '') {
+            return `${fieldName} is required`;
+        }
+        return null;
+    },
+    string: (value, fieldName) => {
+        if (value !== undefined && value !== null && typeof value !== 'string') {
+            return `${fieldName} must be a string`;
+        }
+        return null;
+    },
+    number: (value, fieldName, min, max) => {
+        if (value === undefined || value === null) return null;
+        const num = Number(value);
+        if (isNaN(num)) return `${fieldName} must be a number`;
+        if (min !== undefined && num < min) return `${fieldName} must be at least ${min}`;
+        if (max !== undefined && num > max) return `${fieldName} must be at most ${max}`;
+        return null;
+    },
+    url: (value, fieldName) => {
+        if (!value) return null;
+        // Allow relative paths like "/covers/image.jpg"
+        if (value.startsWith('/')) return null;
+        try {
+            new URL(value);
+            return null;
+        } catch {
+            return `${fieldName} must be a valid URL or path`;
+        }
+    },
+    date: (value, fieldName) => {
+        if (!value) return null;
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+            return `${fieldName} must be a valid date (YYYY-MM-DD)`;
+        }
+        return null;
+    },
+    enum: (value, fieldName, allowedValues) => {
+        if (!value) return null;
+        if (!allowedValues.includes(value)) {
+            return `${fieldName} must be one of: ${allowedValues.join(', ')}`;
+        }
+        return null;
+    }
+};
+
+// Field schemas for each data type
+const FIELD_SCHEMAS = {
+    books: {
+        title: { required: true, type: 'string' },
+        author: { required: true, type: 'string' },
+        publisher: { type: 'string' },
+        country: { type: 'string' },
+        year: { type: 'number', min: 1000, max: 2100 },
+        status: { type: 'enum', values: ['reading', 'completed', 'want-to-read'] },
+        platform: { type: 'string' },
+        cover: { type: 'url' },
+        addedDate: { type: 'date' },
+        rating: { type: 'number', min: 1, max: 10 },
+        notes: { type: 'string' }
+    },
+    movies: {
+        title: { required: true, type: 'string' },
+        director: { type: 'string' },
+        country: { type: 'string' },
+        year: { type: 'number', min: 1000, max: 2100 },
+        status: { type: 'enum', values: ['watching', 'completed', 'want-to-watch'] },
+        cover: { required: true, type: 'url' },
+        addedDate: { type: 'date' },
+        rating: { type: 'number', min: 1, max: 10 },
+        genre: { type: 'string' },
+        notes: { type: 'string' }
+    },
+    series: {
+        title: { required: true, type: 'string' },
+        director: { type: 'string' },
+        country: { type: 'string' },
+        year: { type: 'number', min: 1000, max: 2100 },
+        status: { type: 'enum', values: ['watching', 'completed', 'want-to-watch'] },
+        cover: { required: true, type: 'url' },
+        addedDate: { type: 'date' },
+        rating: { type: 'number', min: 1, max: 10 },
+        genre: { type: 'string' },
+        notes: { type: 'string' }
+    },
+    music: {
+        title: { required: true, type: 'string' },
+        artist: { required: true, type: 'string' },
+        cover: { required: true, type: 'url' },
+        year: { type: 'number', min: 1000, max: 2100 },
+        country: { type: 'string' },
+        addedDate: { type: 'date' },
+        rating: { type: 'number', min: 1, max: 10 },
+        genre: { type: 'string' },
+        notes: { type: 'string' }
+    }
+};
+
+/**
+ * Validate item data against schema
+ * @param {string} type - Data type (books, movies, series, music)
+ * @param {Object} data - Item data to validate
+ * @returns {Object} - { isValid: boolean, errors: string[] }
+ */
+function validateItem(type, data) {
+    const schema = FIELD_SCHEMAS[type];
+    if (!schema) {
+        return { isValid: false, errors: [`Unknown data type: ${type}`] };
+    }
+
+    const errors = [];
+
+    // Check for unknown fields
+    const knownFields = Object.keys(schema);
+    const unknownFields = Object.keys(data).filter(key => 
+        !knownFields.includes(key) && key !== 'id'
+    );
+    if (unknownFields.length > 0) {
+        console.warn(`Unknown fields in ${type}:`, unknownFields);
+    }
+
+    // Validate each field
+    for (const [fieldName, rules] of Object.entries(schema)) {
+        const value = data[fieldName];
+
+        // Check required
+        if (rules.required) {
+            const error = ValidationRules.required(value, fieldName);
+            if (error) {
+                errors.push(error);
+                continue;
+            }
+        }
+
+        // Skip further validation if value is empty and not required
+        if (!value && !rules.required) continue;
+
+        // Type validation
+        switch (rules.type) {
+            case 'string':
+                const stringError = ValidationRules.string(value, fieldName);
+                if (stringError) errors.push(stringError);
+                break;
+            case 'number':
+                const numberError = ValidationRules.number(value, fieldName, rules.min, rules.max);
+                if (numberError) errors.push(numberError);
+                break;
+            case 'url':
+                const urlError = ValidationRules.url(value, fieldName);
+                if (urlError) errors.push(urlError);
+                break;
+            case 'date':
+                const dateError = ValidationRules.date(value, fieldName);
+                if (dateError) errors.push(dateError);
+                break;
+            case 'enum':
+                const enumError = ValidationRules.enum(value, fieldName, rules.values);
+                if (enumError) errors.push(enumError);
+                break;
+        }
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
 
 // CORS 头
 const corsHeaders = {
@@ -113,6 +289,18 @@ async function handleRequest(req, res) {
         // POST - 创建新项目
         if (req.method === 'POST') {
             const body = await getRequestBody(req);
+            
+            // Validate input data
+            const validation = validateItem(type, body);
+            if (!validation.isValid) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ 
+                    error: 'Validation failed', 
+                    details: validation.errors 
+                }));
+                return;
+            }
+
             const data = await readJsonFile(type);
 
             const newItem = {
@@ -134,6 +322,18 @@ async function handleRequest(req, res) {
         // PUT - 更新项目
         if (req.method === 'PUT' && itemId) {
             const body = await getRequestBody(req);
+            
+            // Validate input data (skip id validation)
+            const validation = validateItem(type, body);
+            if (!validation.isValid) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ 
+                    error: 'Validation failed', 
+                    details: validation.errors 
+                }));
+                return;
+            }
+
             const data = await readJsonFile(type);
 
             const index = data.findIndex(i => i.id === itemId);
@@ -205,7 +405,7 @@ server.listen(PORT, () => {
 ║                                                            ║
 ║   🔧 管理 API 服务器已启动                                  ║
 ║                                                            ║
-║   端口: http://localhost:${PORT}                            ║
+║   端口: http://${HOST}:${PORT}                              ║
 ║                                                            ║
 ║   API 端点:                                                 ║
 ║   - GET    /api/books          获取所有书籍                ║
@@ -214,6 +414,10 @@ server.listen(PORT, () => {
 ║   - DELETE /api/books/:id      删除书籍                    ║
 ║                                                            ║
 ║   同样支持: /api/movies, /api/series, /api/music           ║
+║                                                            ║
+║   环境变量:                                                 ║
+║   - ADMIN_API_PORT             设置端口 (默认: 4322)       ║
+║   - ADMIN_API_HOST             设置主机 (默认: localhost)  ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
   `);

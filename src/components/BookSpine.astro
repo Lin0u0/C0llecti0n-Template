@@ -1,18 +1,7 @@
 ---
-interface Props {
-  title: string;
-  author: string;
-  rating?: number;
-  status?: "reading" | "completed" | "want-to-read";
-  cover?: string;
-  id: string;
-  year?: number;
-  addedDate?: string;
-  publisher?: string;
-  platform?: string;
-  country?: string;
-  notes?: string;
-}
+import type { Book } from "../types";
+
+interface Props extends Book {}
 
 const {
   title,

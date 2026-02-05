@@ -11,7 +11,9 @@ import moviesData from "../data/movies.json";
 import seriesData from "../data/series.json";
 
 // Prepare search index data for client-side
-const allItems = [
+import type { SearchItem } from "../types";
+
+const allItems: SearchItem[] = [
     ...booksData.map((b) => ({
         id: b.id,
         title: b.title,
@@ -26,8 +28,9 @@ const allItems = [
         platform: b.platform,
         publisher: b.publisher,
         notes: b.notes,
+        author: b.author,
     })),
-    ...musicData.map((m: any) => ({
+    ...musicData.map((m) => ({
         id: m.id,
         title: m.title,
         creator: m.artist,
@@ -38,8 +41,9 @@ const allItems = [
         rating: m.rating,
         addedDate: m.addedDate,
         genre: m.genre,
+        artist: m.artist,
     })),
-    ...moviesData.map((m: any) => ({
+    ...moviesData.map((m) => ({
         id: m.id,
         title: m.title,
         creator: m.director,
@@ -51,8 +55,9 @@ const allItems = [
         status: m.status,
         addedDate: m.addedDate,
         genre: m.genre,
+        director: m.director,
     })),
-    ...seriesData.map((s: any) => ({
+    ...seriesData.map((s) => ({
         id: s.id,
         title: s.title,
         creator: s.director,
@@ -64,6 +69,7 @@ const allItems = [
         status: s.status,
         addedDate: s.addedDate,
         genre: s.genre,
+        director: s.director,
     })),
 ];
 ---
