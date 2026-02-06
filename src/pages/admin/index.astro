@@ -1,7 +1,4 @@
 ---
-// 管理后台 - 仅供本地开发使用
-// 在 Vercel 部署时，此页面通过 vercel.json 的 rewrites 规则重定向到 404
-
 import Layout from "../../layouts/Layout.astro";
 import booksData from "../../data/books.json";
 import musicData from "../../data/music.json";
@@ -26,11 +23,17 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
 ---
 
 <Layout
-    title="管理后台 - C0llecti0n"
-    description="管理媒体收藏"
+    title="Admin - C0llecti0n"
+    description="Manage your collection"
     stats={stats}
     totalCount={totalCount}
 >
+    {/* Security: Redirect to home if not on localhost */}
+    <script>
+        if (!window.location.hostname.includes('localhost')) {
+            window.location.href = '/';
+        }
+    </script>
     <div class="admin-container">
         <header class="admin-header">
             <div class="header-left">

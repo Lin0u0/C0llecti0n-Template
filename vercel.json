@@ -1,15 +1,18 @@
 {
+    "version": 2,
     "buildCommand": "npm run build:prod",
     "outputDirectory": "dist",
     "framework": "astro",
-    "routes": [
+    "redirects": [
         {
-            "src": "/admin/?",
-            "status": 404
+            "source": "/admin",
+            "destination": "/404",
+            "permanent": false
         },
         {
-            "src": "/admin/(.*)",
-            "status": 404
+            "source": "/admin/:path*",
+            "destination": "/404",
+            "permanent": false
         }
     ]
 }

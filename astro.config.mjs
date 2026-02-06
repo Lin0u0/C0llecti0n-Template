@@ -16,11 +16,11 @@ export default defineConfig({
     vite: {
         build: {
             // Enable CSS code splitting
-            cssCodeSplit: true
+            cssCodeSplit: true,
         }
     },
 
-    server: {                 //此处为新增代码
-        host: '0.0.0.0',      //此处为新增代码
+    server: {
+        host: '0.0.0.0',
     }
 });
