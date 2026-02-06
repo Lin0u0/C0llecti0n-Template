@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 // Configuration from environment variables
 const PORT = process.env.ADMIN_API_PORT || 4322;
 const HOST = process.env.ADMIN_API_HOST || 'localhost';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Security: Check if admin key is configured
 if (!ADMIN_KEY) {
@@ -204,9 +205,6 @@ function validateItem(type, data) {
         errors
     };
 }
-
-// Configuration from environment variables
-const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // CORS 头 - Restrict to localhost for security
 const corsHeaders = {
