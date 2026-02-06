@@ -16,6 +16,11 @@ import { fileURLToPath } from 'url';
 const PORT = process.env.ADMIN_API_PORT || 4322;
 const HOST = process.env.ADMIN_API_HOST || 'localhost';
 
+// Security: Check if admin key is configured
+if (!ADMIN_KEY) {
+    console.warn('⚠️  Warning: ADMIN_KEY not set. Using default key for development only.');
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 数据文件路径
@@ -200,11 +205,14 @@ function validateItem(type, data) {
     };
 }
 
-// CORS 头
+// Configuration from environment variables
+const ADMIN_KEY = process.env.ADMIN_KEY;
+
+// CORS 头 - Restrict to localhost for security
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'http://localhost:4321',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Key',
     'Content-Type': 'application/json',
 };
 
@@ -239,6 +247,17 @@ function generateId(type, items) {
     return `${prefix}-${maxId + 1}`;
 }
 
+// Authentication middleware - Check admin key for write operations
+function isAuthenticated(req) {
+    // Skip authentication for GET requests (read-only)
+    if (req.method === 'GET') return true;
+    
+    const providedKey = req.headers['x-admin-key'];
+    const expectedKey = ADMIN_KEY || 'dev-key-change-in-production';
+    
+    return providedKey === expectedKey;
+}
+
 // 请求处理
 async function handleRequest(req, res) {
     // 设置 CORS
@@ -250,6 +269,13 @@ async function handleRequest(req, res) {
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+    }
+
+    // Security: Check authentication for write operations
+    if (!isAuthenticated(req)) {
+        res.writeHead(401);
+        res.end(JSON.stringify({ error: 'Unauthorized - Invalid or missing admin key' }));
         return;
     }
 

@@ -21,6 +21,7 @@ const totalCount = stats.books + stats.albums + stats.movies + stats.series;
 // 本地 API 服务器地址 - 从环境变量获取，默认为 localhost
 const API_BASE = import.meta.env.ADMIN_API_URL || "http://localhost:4322/api";
 const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
+const ADMIN_KEY = import.meta.env.ADMIN_KEY || "";
 ---
 
 <Layout
@@ -1238,9 +1239,35 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
     }
 </style>
 
-<script define:vars={{ API_BASE }}>
+<script define:vars={{ API_BASE, ADMIN_KEY }}>
     // API 基础地址
     const apiBase = API_BASE;
+    const adminKey = ADMIN_KEY;
+
+    // Security: XSS sanitization helper
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // API request helper with authentication
+    async function apiRequest(url, options = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(adminKey && { 'X-Admin-Key': adminKey }),
+            ...options.headers,
+        };
+        
+        return fetch(url, {
+            ...options,
+            headers,
+        });
+    }
 
     // 当前数据缓存
     let dataCache = {
@@ -1290,7 +1317,7 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
     // 检查 API 连接
     async function checkConnection() {
         try {
-            const response = await fetch(`${apiBase}/books`, { method: "GET" });
+            const response = await apiRequest(`${apiBase}/books`, { method: "GET" });
             if (response.ok) {
                 isConnected = true;
                 connectionStatus?.classList.add("connected");
@@ -1317,7 +1344,7 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
         if (!isConnected) return [];
 
         try {
-            const response = await fetch(`${apiBase}/${type}`);
+            const response = await apiRequest(`${apiBase}/${type}`);
             if (response.ok) {
                 const data = await response.json();
                 dataCache[type] = data;
@@ -1425,19 +1452,19 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
                 }
 
                 return `
-        <div class="table-row" data-id="${item.id}" data-type="${type}">
+        <div class="table-row" data-id="${escapeHtml(item.id)}" data-type="${escapeHtml(type)}">
           <span class="col-cover">
-            <img src="${coverUrl}" alt="${item.title}" class="item-cover" onerror="this.style.visibility='hidden'" />
+            <img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(item.title)}" class="item-cover" onerror="this.style.visibility='hidden'" />
           </span>
-          <span class="col-title">${item.title || "-"}</span>
-          <span class="col-creator">${creator}</span>
+          <span class="col-title">${escapeHtml(item.title) || "-"}</span>
+          <span class="col-creator">${escapeHtml(creator)}</span>
           <span class="col-status">
-            <span class="status-badge ${statusClass}">${statusText}</span>
+            <span class="status-badge ${escapeHtml(statusClass)}">${escapeHtml(statusText)}</span>
           </span>
-          <span class="col-rating" data-rating="${ratingLevel}">${item.rating || "-"}</span>
+          <span class="col-rating" data-rating="${escapeHtml(ratingLevel)}">${item.rating || "-"}</span>
           <span class="col-actions">
-            <button class="edit-btn" data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>编辑</button>
-            <button class="delete-btn" data-id="${item.id}" data-title="${(item.title || "").replace(/"/g, "&quot;")}">删除</button>
+            <button class="edit-btn" data-item='${escapeHtml(JSON.stringify(item))}'>编辑</button>
+            <button class="delete-btn" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}">删除</button>
           </span>
         </div>
       `;
@@ -1447,10 +1474,22 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
         // 绑定编辑和删除按钮事件
         container.querySelectorAll(".edit-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
-                const itemData = JSON.parse(
-                    btn.getAttribute("data-item") || "{}",
-                );
-                openModal(true, type, itemData);
+                const itemDataAttr = btn.getAttribute("data-item");
+                if (!itemDataAttr) return;
+                try {
+                    // Decode HTML entities before parsing JSON
+                    const decodedData = itemDataAttr
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'");
+                    const itemData = JSON.parse(decodedData);
+                    openModal(true, type, itemData);
+                } catch (e) {
+                    console.error('Failed to parse item data:', e);
+                    showToast("数据解析失败", "error");
+                }
             });
         });
 
@@ -1474,7 +1513,7 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
         document.getElementById("form-type").value = itemType;
 
         if (isEdit && itemData) {
-            document.getElementById("form-id").value = itemData.id || "";
+            document.getElementById("form-id").value = escapeHtml(itemData.id) || "";
             document.getElementById("form-title").value = itemData.title || "";
             document.getElementById("form-author").value =
                 itemData.author || "";
@@ -1550,9 +1589,8 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
                 : `${apiBase}/${type}`;
             const method = isEdit ? "PUT" : "POST";
 
-            const response = await fetch(url, {
+            const response = await apiRequest(url, {
                 method,
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
 
@@ -1583,7 +1621,7 @@ const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
         if (!confirm(confirmMsg)) return;
 
         try {
-            const response = await fetch(`${apiBase}/${type}/${id}`, {
+            const response = await apiRequest(`${apiBase}/${type}/${id}`, {
                 method: "DELETE",
             });
 

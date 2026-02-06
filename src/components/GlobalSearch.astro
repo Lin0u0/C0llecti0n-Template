@@ -470,14 +470,14 @@ const allItems: SearchItem[] = [
             }
         }
 
-        function getTypeLabel(type: string): string {
-            const labels: Record<string, string> = {
+        function getTypeLabel(type) {
+            const labels = {
                 book: "📚 书籍",
                 album: "🎵 音乐",
                 movie: "🎬 电影",
                 series: "📺 剧集",
             };
-            return labels[type] || type;
+            return labels[type] || escapeHtml(type);
         }
 
         // Get optimized cover URL from global cover map
@@ -498,23 +498,23 @@ const allItems: SearchItem[] = [
 
             const html = currentResults
                 .map(
-                    (item: any, index: number) => `
+                    (item, index) => `
         <div class="search-result ${index === selectedIndex ? "selected" : ""}" 
              data-index="${index}"
-             data-item='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+             data-item='${escapeHtml(JSON.stringify(item))}'>
           <img 
             class="result-cover ${item.type === "album" ? "album" : ""}" 
-            src="${getCoverUrl(item.cover)}" 
+            src="${escapeHtml(getCoverUrl(item.cover))}" 
             alt=""
             loading="lazy"
           />
           <div class="result-info">
-            <div class="result-title">${item.title}</div>
+            <div class="result-title">${escapeHtml(item.title)}</div>
             <div class="result-meta">
               <span class="result-type">${getTypeLabel(item.type)}</span>
-              ${item.creator ? `<span>${item.creator}</span>` : ""}
-              ${item.year ? `<span>·</span><span>${item.year}</span>` : ""}
-              ${item.rating ? `<span class="result-rating">${item.rating}/10</span>` : ""}
+              ${item.creator ? `<span>${escapeHtml(item.creator)}</span>` : ""}
+              ${item.year ? `<span>·</span><span>${escapeHtml(String(item.year))}</span>` : ""}
+              ${item.rating ? `<span class="result-rating">${escapeHtml(String(item.rating))}/10</span>` : ""}
             </div>
           </div>
         </div>
@@ -537,18 +537,25 @@ const allItems: SearchItem[] = [
                 el.addEventListener("click", () => {
                     const itemData = el.getAttribute("data-item");
                     if (itemData) {
-                        openDetail(JSON.parse(itemData.replace(/&#39;/g, "'")));
+                        // Decode HTML entities before parsing JSON
+                        const decodedData = itemData
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&#39;/g, "'");
+                        openDetail(JSON.parse(decodedData));
                     }
                 });
             });
         }
 
-        function openDetail(item: any) {
+        function openDetail(item) {
             closeSearch();
 
             // Trigger detail modal with the item data
             // Convert to the format expected by DetailModal
-            const detailData: Record<string, string> = {
+            const detailData = {
                 title: item.title || "",
                 cover: item.cover || "",
                 rating: item.rating?.toString() || "",
