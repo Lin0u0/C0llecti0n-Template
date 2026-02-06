@@ -19,9 +19,10 @@ const stats = {
 const totalCount = stats.books + stats.albums + stats.movies + stats.series;
 
 // 本地 API 服务器地址 - 从环境变量获取，默认为 localhost
+// Note: PUBLIC_ADMIN_KEY is required for client-side access (Astro requirement)
 const API_BASE = import.meta.env.ADMIN_API_URL || "http://localhost:4322/api";
 const API_PORT = import.meta.env.ADMIN_API_PORT || "4322";
-const ADMIN_KEY = import.meta.env.ADMIN_KEY || "";
+const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY || "";
 ---
 
 <Layout
@@ -1243,6 +1244,11 @@ const ADMIN_KEY = import.meta.env.ADMIN_KEY || "";
     // API 基础地址
     const apiBase = API_BASE;
     const adminKey = ADMIN_KEY;
+
+    // Warn if admin key is not configured
+    if (!adminKey) {
+        console.warn('⚠️ Warning: ADMIN_KEY / PUBLIC_ADMIN_KEY not set. Write operations will fail.');
+    }
 
     // Security: XSS sanitization helper
     function escapeHtml(str) {

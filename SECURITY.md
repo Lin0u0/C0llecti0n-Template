@@ -87,8 +87,12 @@ URLs are validated to prevent malicious redirects:
 2. **Set a custom admin key:**
    ```bash
    # .env
+   # For client-side access in Astro, use PUBLIC_ prefix
+   PUBLIC_ADMIN_KEY=my-local-dev-key
    ADMIN_KEY=my-local-dev-key
    ```
+
+   **Note:** Astro requires the `PUBLIC_` prefix for environment variables to be accessible in client-side code. Both variables should have the same value.
 
 ### Production Deployment
 
