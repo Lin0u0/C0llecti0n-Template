@@ -388,6 +388,17 @@ const allItems: SearchItem[] = [
 </style>
 
 <script>
+    // Escape HTML to prevent XSS
+    function escapeHtml(text: string): string {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // Global Search functionality
     document.addEventListener("DOMContentLoaded", () => {
         const overlay = document.getElementById("global-search");
@@ -500,8 +511,7 @@ const allItems: SearchItem[] = [
                 .map(
                     (item, index) => `
         <div class="search-result ${index === selectedIndex ? "selected" : ""}" 
-             data-index="${index}"
-             data-item='${escapeHtml(JSON.stringify(item))}'>
+             data-index="${index}">
           <img 
             class="result-cover ${item.type === "album" ? "album" : ""}" 
             src="${escapeHtml(getCoverUrl(item.cover))}" 
@@ -535,16 +545,9 @@ const allItems: SearchItem[] = [
             // Add click handlers
             results.querySelectorAll(".search-result").forEach((el) => {
                 el.addEventListener("click", () => {
-                    const itemData = el.getAttribute("data-item");
-                    if (itemData) {
-                        // Decode HTML entities before parsing JSON
-                        const decodedData = itemData
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&quot;/g, '"')
-                            .replace(/&#39;/g, "'");
-                        openDetail(JSON.parse(decodedData));
+                    const index = parseInt(el.getAttribute("data-index") || "-1", 10);
+                    if (index >= 0 && currentResults[index]) {
+                        openDetail(currentResults[index]);
                     }
                 });
             });
