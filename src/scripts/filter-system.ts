@@ -92,8 +92,9 @@ export class FilterSystem {
                     continue;
                 }
 
-                // For other fields, check if item value contains filter value
-                if (!itemValue.includes(filterValue)) {
+                // For other fields, split by slash and check membership
+                const itemValues = itemValue.split(/\s*\/\s*/).map(v => v.trim()).filter(Boolean);
+                if (!itemValues.includes(filterValue)) {
                     shouldShow = false;
                     break;
                 }

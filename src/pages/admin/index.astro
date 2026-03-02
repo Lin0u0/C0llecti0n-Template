@@ -30,11 +30,12 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
 >
     {/* Security: Redirect to home if not on localhost */}
     <script>
-        if (!window.location.hostname.includes('localhost')) {
-            window.location.href = '/';
+        const h = window.location.hostname;
+        if (h !== 'localhost' && h !== '127.0.0.1' && !h.startsWith('192.168.')) {
+            window.location.replace('/');
         }
     </script>
-    <div class="admin-container">
+    <div class="admin-container" style="visibility:hidden">
         <header class="admin-header">
             <div class="header-left">
                 <a href="/" class="back-link">← 返回首页</a>
@@ -1472,7 +1473,7 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
           </span>
           <span class="col-rating" data-rating="${escapeHtml(ratingLevel)}">${item.rating || "-"}</span>
           <span class="col-actions">
-            <button class="edit-btn" data-item='${escapeHtml(JSON.stringify(item))}'>编辑</button>
+            <button class="edit-btn" data-id="${escapeHtml(item.id)}">编辑</button>
             <button class="delete-btn" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}">删除</button>
           </span>
         </div>
@@ -1483,22 +1484,11 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
         // 绑定编辑和删除按钮事件
         container.querySelectorAll(".edit-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
-                const itemDataAttr = btn.getAttribute("data-item");
-                if (!itemDataAttr) return;
-                try {
-                    // Decode HTML entities before parsing JSON
-                    const decodedData = itemDataAttr
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&quot;/g, '"')
-                        .replace(/&#39;/g, "'");
-                    const itemData = JSON.parse(decodedData);
-                    openModal(true, type, itemData);
-                } catch (e) {
-                    console.error('Failed to parse item data:', e);
-                    showToast("数据解析失败", "error");
-                }
+                const itemId = btn.getAttribute("data-id");
+                if (!itemId) return;
+                const itemData = dataCache[type]?.find(i => i.id === itemId);
+                if (!itemData) { showToast("数据不存在", "error"); return; }
+                openModal(true, type, itemData);
             });
         });
 
@@ -1716,6 +1706,8 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
         if (connected) {
             await refreshAllData();
         }
+        const container = document.querySelector('.admin-container');
+        if (container) container.style.visibility = '';
     }
 
     init();

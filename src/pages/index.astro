@@ -32,7 +32,7 @@ const recentMovies = [...moviesData, ...seriesData]
   .filter((m) => (m.addedDate || "").startsWith(CURRENT_YEAR.toString()))
   .map((m) => ({
     ...m,
-    type: (m.id.includes("movie") ? "movie" : "series") as "movie" | "series",
+    type: m.type as "movie" | "series",
   }))
   .sort(
     (a, b) =>

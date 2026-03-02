@@ -19,7 +19,7 @@ const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Security: Check if admin key is configured
 if (!ADMIN_KEY) {
-    console.warn('⚠️  Warning: ADMIN_KEY not set. Using default key for development only.');
+    console.warn('⚠️  Warning: ADMIN_KEY not set. Write operations (POST/PUT/DELETE) will be rejected with 503 until ADMIN_KEY is configured.');
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -249,11 +249,9 @@ function generateId(type, items) {
 function isAuthenticated(req) {
     // Skip authentication for GET requests (read-only)
     if (req.method === 'GET') return true;
-    
+    if (!ADMIN_KEY) return false; // no key configured → block writes
     const providedKey = req.headers['x-admin-key'];
-    const expectedKey = ADMIN_KEY || 'dev-key-change-in-production';
-    
-    return providedKey === expectedKey;
+    return providedKey === ADMIN_KEY;
 }
 
 // 请求处理
@@ -272,8 +270,10 @@ async function handleRequest(req, res) {
 
     // Security: Check authentication for write operations
     if (!isAuthenticated(req)) {
-        res.writeHead(401);
-        res.end(JSON.stringify({ error: 'Unauthorized - Invalid or missing admin key' }));
+        const status = !ADMIN_KEY ? 503 : 401;
+        const message = !ADMIN_KEY ? 'Service unavailable - ADMIN_KEY not configured' : 'Unauthorized - Invalid admin key';
+        res.writeHead(status);
+        res.end(JSON.stringify({ error: message }));
         return;
     }
 
@@ -406,10 +406,18 @@ async function handleRequest(req, res) {
 }
 
 // 解析请求体
+const MAX_BODY_SIZE = 1_000_000; // 1 MB
+
 function getRequestBody(req) {
     return new Promise((resolve, reject) => {
         let body = '';
-        req.on('data', chunk => body += chunk);
+        req.on('data', chunk => {
+            body += chunk;
+            if (body.length > MAX_BODY_SIZE) {
+                reject(new Error('Request body too large'));
+                req.destroy();
+            }
+        });
         req.on('end', () => {
             try {
                 resolve(JSON.parse(body || '{}'));
