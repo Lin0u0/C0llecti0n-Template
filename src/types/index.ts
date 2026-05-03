@@ -8,16 +8,21 @@
 export interface BaseMedia {
     id: string;
     title: string;
+    originalTitle?: string;
     cover?: string;
     rating?: number;
     year?: number;
     country?: string;
     addedDate?: string;
+    doubanId?: string;
+    doubanUrl?: string;
+    source?: "manual" | "douban";
     notes?: string;
 }
 
 export type BookStatus = "reading" | "completed" | "want-to-read";
 export type MediaStatus = "watching" | "completed" | "want-to-watch";
+export type MusicStatus = "listening" | "completed" | "want-to-listen";
 
 // ==================== Specific Media Types ====================
 
@@ -30,6 +35,7 @@ export interface Book extends BaseMedia {
 
 export interface Album extends BaseMedia {
     artist: string;
+    status?: MusicStatus;
     genre?: string;
 }
 
@@ -97,6 +103,7 @@ export interface ApiResponse<T> {
 export interface SearchItem {
     id: string;
     title: string;
+    originalTitle?: string;
     creator?: string;
     type: "book" | "album" | "movie" | "series";
     cover?: string;

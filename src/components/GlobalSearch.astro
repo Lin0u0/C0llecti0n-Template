@@ -9,14 +9,16 @@ import booksData from "../data/books.json";
 import musicData from "../data/music.json";
 import moviesData from "../data/movies.json";
 import seriesData from "../data/series.json";
+import { publicCollectionItems } from "../utils/public-collection";
 
 // Prepare search index data for client-side
 import type { SearchItem } from "../types";
 
 const allItems: SearchItem[] = [
-    ...booksData.map((b) => ({
+    ...publicCollectionItems(booksData).map((b) => ({
         id: b.id,
         title: b.title,
+        originalTitle: b.originalTitle,
         creator: b.author,
         type: "book" as const,
         cover: b.cover,
@@ -30,9 +32,10 @@ const allItems: SearchItem[] = [
         notes: b.notes,
         author: b.author,
     })),
-    ...musicData.map((m) => ({
+    ...publicCollectionItems(musicData).map((m) => ({
         id: m.id,
         title: m.title,
+        originalTitle: m.originalTitle,
         creator: m.artist,
         type: "album" as const,
         cover: m.cover,
@@ -43,9 +46,10 @@ const allItems: SearchItem[] = [
         genre: m.genre,
         artist: m.artist,
     })),
-    ...moviesData.map((m) => ({
+    ...publicCollectionItems(moviesData).map((m) => ({
         id: m.id,
         title: m.title,
+        originalTitle: m.originalTitle,
         creator: m.director,
         type: "movie" as const,
         cover: m.cover,
@@ -57,9 +61,10 @@ const allItems: SearchItem[] = [
         genre: m.genre,
         director: m.director,
     })),
-    ...seriesData.map((s) => ({
+    ...publicCollectionItems(seriesData).map((s) => ({
         id: s.id,
         title: s.title,
+        originalTitle: s.originalTitle,
         creator: s.director,
         type: "series" as const,
         cover: s.cover,
@@ -441,6 +446,7 @@ const allItems: SearchItem[] = [
             currentResults = searchData.filter((item: any) => {
                 const fields = [
                     item.title,
+                    item.originalTitle,
                     item.creator,
                     item.notes,
                     item.country,

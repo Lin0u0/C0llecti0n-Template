@@ -11,6 +11,7 @@ import { createServer } from 'http';
 import { readFile, writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { syncDoubanCollection } from './src/utils/douban-sync.mjs';
 
 // Configuration from environment variables
 const PORT = process.env.ADMIN_API_PORT || 4322;
@@ -32,6 +33,7 @@ const DATA_FILES = {
     series: join(DATA_DIR, 'series.json'),
     music: join(DATA_DIR, 'music.json'),
 };
+const COVERS_DIR = join(__dirname, 'src', 'assets', 'covers');
 
 // ==================== Data Validation Schemas ====================
 
@@ -88,6 +90,7 @@ const ValidationRules = {
 const FIELD_SCHEMAS = {
     books: {
         title: { required: true, type: 'string' },
+        originalTitle: { type: 'string' },
         author: { required: true, type: 'string' },
         publisher: { type: 'string' },
         country: { type: 'string' },
@@ -97,10 +100,14 @@ const FIELD_SCHEMAS = {
         cover: { type: 'url' },
         addedDate: { type: 'date' },
         rating: { type: 'number', min: 1, max: 10 },
+        doubanId: { type: 'string' },
+        doubanUrl: { type: 'url' },
+        source: { type: 'enum', values: ['manual', 'douban'] },
         notes: { type: 'string' }
     },
     movies: {
         title: { required: true, type: 'string' },
+        originalTitle: { type: 'string' },
         director: { type: 'string' },
         country: { type: 'string' },
         year: { type: 'number', min: 1000, max: 2100 },
@@ -109,10 +116,15 @@ const FIELD_SCHEMAS = {
         addedDate: { type: 'date' },
         rating: { type: 'number', min: 1, max: 10 },
         genre: { type: 'string' },
+        type: { type: 'enum', values: ['movie'] },
+        doubanId: { type: 'string' },
+        doubanUrl: { type: 'url' },
+        source: { type: 'enum', values: ['manual', 'douban'] },
         notes: { type: 'string' }
     },
     series: {
         title: { required: true, type: 'string' },
+        originalTitle: { type: 'string' },
         director: { type: 'string' },
         country: { type: 'string' },
         year: { type: 'number', min: 1000, max: 2100 },
@@ -121,17 +133,26 @@ const FIELD_SCHEMAS = {
         addedDate: { type: 'date' },
         rating: { type: 'number', min: 1, max: 10 },
         genre: { type: 'string' },
+        type: { type: 'enum', values: ['series'] },
+        doubanId: { type: 'string' },
+        doubanUrl: { type: 'url' },
+        source: { type: 'enum', values: ['manual', 'douban'] },
         notes: { type: 'string' }
     },
     music: {
         title: { required: true, type: 'string' },
+        originalTitle: { type: 'string' },
         artist: { required: true, type: 'string' },
         cover: { required: true, type: 'url' },
         year: { type: 'number', min: 1000, max: 2100 },
         country: { type: 'string' },
         addedDate: { type: 'date' },
         rating: { type: 'number', min: 1, max: 10 },
+        status: { type: 'enum', values: ['completed', 'listening', 'want-to-listen'] },
         genre: { type: 'string' },
+        doubanId: { type: 'string' },
+        doubanUrl: { type: 'url' },
+        source: { type: 'enum', values: ['manual', 'douban'] },
         notes: { type: 'string' }
     }
 };
@@ -284,6 +305,41 @@ async function handleRequest(req, res) {
     if (pathParts[0] !== 'api' || !pathParts[1]) {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'Not found' }));
+        return;
+    }
+
+    // POST /api/douban/sync - sync public Douban collection pages into local JSON data
+    if (pathParts[1] === 'douban' && pathParts[2] === 'sync') {
+        if (req.method !== 'POST') {
+            res.writeHead(405);
+            res.end(JSON.stringify({ error: 'Method not allowed' }));
+            return;
+        }
+
+        try {
+            const body = await getRequestBody(req);
+            const doubanUserId = String(body.userId || process.env.DOUBAN_USER_ID || '').trim();
+            const dataTypes = body.types || body.dataTypes;
+            const doubanCookie = String(body.cookie || body.doubanCookie || process.env.DOUBAN_COOKIE || '').trim();
+            const result = await syncDoubanCollection({
+                userId: doubanUserId,
+                dataTypes,
+                dataFiles: DATA_FILES,
+                coversDir: COVERS_DIR,
+                delayMs: Number(process.env.DOUBAN_SYNC_DELAY_MS || 2500),
+                cookie: doubanCookie,
+            });
+            console.log(`✅ Synced Douban collection: +${result.added}, updated ${result.updated}, skipped ${result.skipped}, failed ${result.failed}`);
+            res.writeHead(200);
+            res.end(JSON.stringify(result));
+        } catch (error) {
+            console.error('Douban sync error:', error);
+            res.writeHead(error.statusCode || 500);
+            res.end(JSON.stringify({
+                error: error.message,
+                details: error.details || undefined,
+            }));
+        }
         return;
     }
 
@@ -444,6 +500,7 @@ server.listen(PORT, () => {
 ║   - POST   /api/books          添加新书籍                  ║
 ║   - PUT    /api/books/:id      更新书籍                    ║
 ║   - DELETE /api/books/:id      删除书籍                    ║
+║   - POST   /api/douban/sync    同步豆瓣收藏                ║
 ║                                                            ║
 ║   同样支持: /api/movies, /api/series, /api/music           ║
 ║                                                            ║

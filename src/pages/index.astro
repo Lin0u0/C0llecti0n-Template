@@ -8,11 +8,16 @@ import booksData from "../data/books.json";
 import musicData from "../data/music.json";
 import moviesData from "../data/movies.json";
 import seriesData from "../data/series.json";
+import { publicCollectionItems } from "../utils/public-collection";
 
 // Get "Current Year"
 const CURRENT_YEAR = new Date().getFullYear();
+const publicBooksData = publicCollectionItems(booksData);
+const publicMusicData = publicCollectionItems(musicData);
+const publicMoviesData = publicCollectionItems(moviesData);
+const publicSeriesData = publicCollectionItems(seriesData);
 
-const recentBooks = booksData
+const recentBooks = publicBooksData
   .filter((b) => (b.addedDate || "").startsWith(CURRENT_YEAR.toString()))
   .sort(
     (a, b) =>
@@ -20,7 +25,7 @@ const recentBooks = booksData
       new Date(a.addedDate || "1970-01-01").getTime(),
   );
 
-const recentMusic = musicData
+const recentMusic = publicMusicData
   .filter((m) => (m.addedDate || "").startsWith(CURRENT_YEAR.toString()))
   .sort(
     (a, b) =>
@@ -28,7 +33,7 @@ const recentMusic = musicData
       new Date(a.addedDate || "1970-01-01").getTime(),
   );
 
-const recentMovies = [...moviesData, ...seriesData]
+const recentMovies = [...publicMoviesData, ...publicSeriesData]
   .filter((m) => (m.addedDate || "").startsWith(CURRENT_YEAR.toString()))
   .map((m) => ({
     ...m,

@@ -10,10 +10,11 @@ import moviesData from "../data/movies.json";
 import seriesData from "../data/series.json";
 import type { Movie, Series } from "../types";
 import { extractFilterOptions, extractNumericOptions, getAddedYear } from "../utils/filters";
+import { publicCollectionItems } from "../utils/public-collection";
 
 // Type assertion and combine
-const movies: Movie[] = moviesData.map((m) => ({ ...m, type: "movie" as const }));
-const series: Series[] = seriesData.map((s) => ({ ...s, type: "series" as const }));
+const movies: Movie[] = publicCollectionItems(moviesData).map((m) => ({ ...m, type: "movie" as const }));
+const series: Series[] = publicCollectionItems(seriesData).map((s) => ({ ...s, type: "series" as const }));
 
 const allMedia = [...movies, ...series].sort((a, b) => {
     const dateA = new Date(a.addedDate || "1970-01-01").getTime();

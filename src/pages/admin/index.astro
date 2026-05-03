@@ -97,6 +97,52 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
                         <path d="M21 3v5h-5"></path>
                     </svg>
                 </button>
+                <label class="douban-id-field" for="douban-user-id">
+                    <span>豆瓣 ID</span>
+                    <input
+                        type="text"
+                        id="douban-user-id"
+                        class="douban-id-input"
+                        autocomplete="username"
+                        placeholder="people/ 后面的 ID"
+                    />
+                </label>
+                <label class="douban-id-field" for="douban-sync-type">
+                    <span>范围</span>
+                    <select id="douban-sync-type" class="douban-select">
+                        <option value="all">全部</option>
+                        <option value="books">书籍</option>
+                        <option value="movies">电影</option>
+                        <option value="series">剧集</option>
+                        <option value="music">音乐</option>
+                    </select>
+                </label>
+                <label class="douban-id-field douban-cookie-field" for="douban-cookie">
+                    <span>Cookie</span>
+                    <input
+                        type="password"
+                        id="douban-cookie"
+                        class="douban-id-input douban-cookie-input"
+                        autocomplete="off"
+                        placeholder="可选"
+                    />
+                </label>
+                <button class="sync-btn" id="sync-douban-btn" title="同步豆瓣数据">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M21 12a9 9 0 0 1-15.5 6.3"></path>
+                        <path d="M3 12A9 9 0 0 1 18.5 5.7"></path>
+                        <path d="M3 18v-6h6"></path>
+                        <path d="M21 6v6h-6"></path>
+                    </svg>
+                    同步豆瓣
+                </button>
                 <button class="add-btn" id="add-item-btn">
                     <svg
                         width="16"
@@ -268,8 +314,10 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
                         <option value="completed">已完成</option>
                         <option value="reading">阅读中</option>
                         <option value="watching">观看中</option>
+                        <option value="listening">在听</option>
                         <option value="want-to-read">想读</option>
                         <option value="want-to-watch">想看</option>
+                        <option value="want-to-listen">想听</option>
                     </select>
                 </div>
 
@@ -603,6 +651,106 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
         animation: spin 1s linear infinite;
     }
 
+    .douban-id-field {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: 6px 12px;
+        background: var(--bg-wall);
+        border: 1px solid var(--border-subtle);
+        border-radius: 20px;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        white-space: nowrap;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+    }
+
+    .douban-id-input {
+        width: 150px;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font: inherit;
+        outline: none;
+    }
+
+    .douban-id-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .douban-id-input:focus {
+        color: var(--brass);
+    }
+
+    .douban-select {
+        width: 82px;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font: inherit;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .douban-cookie-input {
+        width: 190px;
+    }
+
+    :global([data-theme="light"]) .douban-id-field {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .sync-btn {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: 8px 16px;
+        background: var(--brass);
+        border: 1px solid var(--brass);
+        border-radius: 20px;
+        color: #1f1600;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.4),
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.25),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+        border-top-color: rgba(255, 255, 255, 0.18);
+        border-bottom-color: rgba(0, 0, 0, 0.3);
+    }
+
+    @media (hover: hover) {
+        .sync-btn:hover {
+            filter: brightness(1.05);
+            box-shadow:
+                0 3px 6px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+        }
+    }
+
+    .sync-btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .sync-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .sync-btn.loading svg {
+        animation: spin 1s linear infinite;
+    }
+
     @keyframes spin {
         from {
             transform: rotate(0deg);
@@ -787,12 +935,14 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
     }
 
     :global(.status-badge.reading),
-    :global(.status-badge.watching) {
+    :global(.status-badge.watching),
+    :global(.status-badge.listening) {
         background: #6b8cae;
     }
 
     :global(.status-badge.want-to-read),
-    :global(.status-badge.want-to-watch) {
+    :global(.status-badge.want-to-watch),
+    :global(.status-badge.want-to-listen) {
         background: var(--text-muted);
     }
 
@@ -1290,18 +1440,46 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
     // 从 sessionStorage 恢复之前的 tab，默认为 'books'
     let currentTab = sessionStorage.getItem("admin_current_tab") || "books";
     let isConnected = false;
+    const savedDoubanUserId = localStorage.getItem("admin_douban_user_id") || "";
+    const savedDoubanSyncType = localStorage.getItem("admin_douban_sync_type") || "all";
+    const savedDoubanCookie = sessionStorage.getItem("admin_douban_cookie") || "";
 
     // DOM 元素
     const connectionStatus = document.getElementById("connection-status");
     const statusText = connectionStatus?.querySelector(".status-text");
     const addBtn = document.getElementById("add-item-btn");
     const refreshBtn = document.getElementById("refresh-btn");
+    const syncBtn = document.getElementById("sync-douban-btn");
+    const doubanUserIdInput = document.getElementById("douban-user-id");
+    const doubanSyncTypeSelect = document.getElementById("douban-sync-type");
+    const doubanCookieInput = document.getElementById("douban-cookie");
     const modal = document.getElementById("edit-modal");
     const modalTitle = document.getElementById("modal-title");
     const form = document.getElementById("edit-form");
     const closeBtn = document.getElementById("modal-close");
     const cancelBtn = document.getElementById("form-cancel");
     const toast = document.getElementById("toast");
+
+    if (doubanUserIdInput) {
+        doubanUserIdInput.value = savedDoubanUserId;
+        doubanUserIdInput.addEventListener("input", () => {
+            localStorage.setItem("admin_douban_user_id", doubanUserIdInput.value.trim());
+        });
+    }
+
+    if (doubanSyncTypeSelect) {
+        doubanSyncTypeSelect.value = savedDoubanSyncType;
+        doubanSyncTypeSelect.addEventListener("change", () => {
+            localStorage.setItem("admin_douban_sync_type", doubanSyncTypeSelect.value);
+        });
+    }
+
+    if (doubanCookieInput) {
+        doubanCookieInput.value = savedDoubanCookie;
+        doubanCookieInput.addEventListener("input", () => {
+            sessionStorage.setItem("admin_douban_cookie", doubanCookieInput.value.trim());
+        });
+    }
 
     // 设置初始 Tab 状态
     function initTabState() {
@@ -1334,6 +1512,7 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
                 connectionStatus?.classList.remove("disconnected");
                 if (statusText) statusText.textContent = "API 已连接";
                 if (addBtn) addBtn.disabled = false;
+                if (syncBtn) syncBtn.disabled = false;
                 return true;
             }
         } catch (e) {
@@ -1346,6 +1525,7 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
         if (statusText)
             statusText.textContent = "API 未连接 - 请运行 npm run admin-server";
         if (addBtn) addBtn.disabled = true;
+        if (syncBtn) syncBtn.disabled = true;
         return false;
     }
 
@@ -1412,8 +1592,10 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
             completed: "已完成",
             reading: "阅读中",
             watching: "观看中",
+            listening: "在听",
             "want-to-read": "想读",
             "want-to-watch": "想看",
+            "want-to-listen": "想听",
         };
         return map[status] || status || "-";
     }
@@ -1637,6 +1819,62 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
         }
     }
 
+    async function handleDoubanSync() {
+        if (!isConnected) {
+            showToast("API 未连接", "error");
+            return;
+        }
+
+        if (!syncBtn) return;
+        const doubanUserId = doubanUserIdInput?.value?.trim() || "";
+        if (!doubanUserId) {
+            showToast("请先填写豆瓣 ID", "error");
+            doubanUserIdInput?.focus();
+            return;
+        }
+
+        localStorage.setItem("admin_douban_user_id", doubanUserId);
+        const syncType = doubanSyncTypeSelect?.value || "all";
+        const doubanCookie = doubanCookieInput?.value?.trim() || "";
+        const body = { userId: doubanUserId };
+        if (syncType !== "all") body.types = [syncType];
+        if (doubanCookie) body.cookie = doubanCookie;
+
+        syncBtn.classList.add("loading");
+        syncBtn.disabled = true;
+        showToast("正在同步豆瓣数据...", "success");
+
+        try {
+            const response = await apiRequest(`${apiBase}/douban/sync`, {
+                method: "POST",
+                body: JSON.stringify(body),
+            });
+            const result = await response.json();
+
+            if (!response.ok) {
+                showToast(result.error || "豆瓣同步失败", "error");
+                return;
+            }
+
+            await Promise.all([
+                fetchData("books"),
+                fetchData("movies"),
+                fetchData("series"),
+                fetchData("music"),
+            ]);
+            updateCounts();
+            renderList(currentTab);
+
+            const failedText = result.failed ? `，失败 ${result.failed}` : "";
+            showToast(`豆瓣同步完成：新增 ${result.added}，更新 ${result.updated}，跳过 ${result.skipped}${failedText}`, "success");
+        } catch (e) {
+            showToast("豆瓣同步失败: " + e.message, "error");
+        } finally {
+            syncBtn.classList.remove("loading");
+            syncBtn.disabled = !isConnected;
+        }
+    }
+
     // 显示 Toast
     function showToast(message, type = "success") {
         if (!toast) return;
@@ -1689,6 +1927,7 @@ const ADMIN_KEY = import.meta.env.PUBLIC_ADMIN_KEY || import.meta.env.ADMIN_KEY 
     // 事件绑定
     addBtn?.addEventListener("click", () => openModal(false, currentTab));
     refreshBtn?.addEventListener("click", refreshAllData);
+    syncBtn?.addEventListener("click", handleDoubanSync);
     closeBtn?.addEventListener("click", closeModal);
     cancelBtn?.addEventListener("click", closeModal);
     modal

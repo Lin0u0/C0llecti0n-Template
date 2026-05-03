@@ -10,19 +10,26 @@ import booksData from "../data/books.json";
 import musicData from "../data/music.json";
 import moviesData from "../data/movies.json";
 import seriesData from "../data/series.json";
+import { publicCollectionItems } from "../utils/public-collection";
 
 interface Props {
     width?: number;
 }
 
 const { width = 360 } = Astro.props;
+const includePrivateItems = Astro.url.pathname.startsWith("/admin");
+
+const visibleBooks = includePrivateItems ? booksData : publicCollectionItems(booksData);
+const visibleMusic = includePrivateItems ? musicData : publicCollectionItems(musicData);
+const visibleMovies = includePrivateItems ? moviesData : publicCollectionItems(moviesData);
+const visibleSeries = includePrivateItems ? seriesData : publicCollectionItems(seriesData);
 
 // Collect all cover paths
 const allCoverPaths = [
-    ...booksData.map((b) => b.cover),
-    ...musicData.map((m) => m.cover),
-    ...moviesData.map((m) => m.cover),
-    ...seriesData.map((s) => s.cover),
+    ...visibleBooks.map((b) => b.cover),
+    ...visibleMusic.map((m) => m.cover),
+    ...visibleMovies.map((m) => m.cover),
+    ...visibleSeries.map((s) => s.cover),
 ].filter(Boolean) as string[];
 
 // Generate optimized images and create mapping with dimensions

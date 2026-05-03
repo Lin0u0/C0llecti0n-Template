@@ -46,6 +46,9 @@ Available environment variables:
 - `ADMIN_KEY` - Access key for admin panel
 - `ADMIN_API_URL` - Admin API server URL (default: http://localhost:4322/api)
 - `ADMIN_API_PORT` - Admin API server port (default: 4322)
+- `DOUBAN_USER_ID` - Optional fallback Douban user ID; the `/admin` input is preferred
+- `DOUBAN_SYNC_DELAY_MS` - Optional delay between Douban requests (default: 2500)
+- `DOUBAN_COOKIE` - Optional local-only cookie if public Douban pages are blocked
 
 ### Running Locally
 
@@ -110,6 +113,12 @@ Data is stored in `src/data/`:
 - `music.json`
 
 You can edit these directly or use the **Admin Panel** running locally.
+
+### Douban Sync
+
+Start both local servers, open `/admin`, fill in **豆瓣 ID**, choose a sync range, then use **同步豆瓣**.
+The sync reads public Douban collection pages for books, movies, TV series, and music, downloads covers into `src/assets/covers/`, and merges into the local JSON files with local edits taking priority.
+If Douban blocks public collection pages, paste a logged-in Douban Cookie in the local admin page or set `DOUBAN_COOKIE` in `.env`.
 
 ### Data Validation
 

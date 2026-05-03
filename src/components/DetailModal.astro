@@ -522,13 +522,15 @@ const { isOpen = false } = Astro.props;
 
   /* Reading/Watching status - desaturated blue */
   .meta-value.status[data-status="reading"],
-  .meta-value.status[data-status="watching"] {
+  .meta-value.status[data-status="watching"],
+  .meta-value.status[data-status="listening"] {
     background: #6b8cae;
   }
 
   /* Want to read/watch - muted gray */
   .meta-value.status[data-status="want-to-read"],
-  .meta-value.status[data-status="want-to-watch"] {
+  .meta-value.status[data-status="want-to-watch"],
+  .meta-value.status[data-status="want-to-listen"] {
     background: var(--text-muted);
   }
 
@@ -727,6 +729,8 @@ const { isOpen = false } = Astro.props;
           "want-to-read": "想读",
           watching: "观看中",
           "want-to-watch": "想看",
+          listening: "在听",
+          "want-to-listen": "想听",
         };
         if (data.status) {
           statusEl.textContent = statusMap[data.status] || data.status;

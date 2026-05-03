@@ -9,9 +9,10 @@ import SearchButton from "../components/SearchButton.astro";
 import booksData from "../data/books.json";
 import type { Book } from "../types";
 import { splitBySlash, extractFilterOptions, extractNumericOptions, getAddedYear } from "../utils/filters";
+import { publicCollectionItems } from "../utils/public-collection";
 
 // Type assertion and sort
-const books: Book[] = booksData.map((b) => ({
+const books: Book[] = publicCollectionItems(booksData).map((b) => ({
     ...b,
     status: b.status as Book["status"],
 })).sort(

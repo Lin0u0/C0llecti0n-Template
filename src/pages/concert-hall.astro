@@ -8,9 +8,10 @@ import SearchButton from "../components/SearchButton.astro";
 import musicData from "../data/music.json";
 import type { Album } from "../types";
 import { extractFilterOptions, extractNumericOptions, getAddedYear } from "../utils/filters";
+import { publicCollectionItems } from "../utils/public-collection";
 
 // Type assertion and sort
-const albums: Album[] = musicData.map((item) => ({
+const albums: Album[] = publicCollectionItems(musicData).map((item) => ({
     ...item,
 })).sort(
     (a, b) =>
